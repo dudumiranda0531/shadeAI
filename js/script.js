@@ -1,333 +1,474 @@
-const chat = document.getElementById("chat");
-const perguntaInput = document.getElementById("pergunta");
-const btnEnviar = document.getElementById("btnEnviar");
-const falaMascote = document.getElementById("falaMascote");
-const mascoteImg = document.getElementById("mascote");
-const mascoteFallback = document.getElementById("mascoteFallback");
+// ==========================================================================
+// shadeAI - Controlador Principal e Inicialização do Aplicativo (JS Entrypoint)
+// ==========================================================================
 
-// Memória simples da sessão
-let memoria = [];
+// ==========================================
+// 1. COMPORTAMENTO DE ABAS
+// ==========================================
+function switchTab(tabId) {
+  activeTab = tabId;
+  
+  // Atualiza botões
+  tabButtons.forEach(btn => {
+    if (btn.getAttribute("data-tab") === tabId) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
 
-// Caminhos das imagens do mascote (corrigido para a pasta img/ real)
-const imagensMascote = {
-  feliz: "img/feliz.png",
-  pensativo: "img/pensativo.png",
-  confiante: "img/confiante.png",
-  neutro: "img/neutro.png"
-};
+  // Atualiza painéis
+  tabPanels.forEach(panel => {
+    if (panel.id === `panel-${tabId}`) {
+      panel.classList.add("active");
+    } else {
+      panel.classList.remove("active");
+    }
+  });
+}
 
-// Emojis usados enquanto as imagens ainda não existem ou falham
-const fallbackEmocoes = {
-  feliz: "😊",
-  pensativo: "🤔",
-  confiante: "💪",
-  neutro: "😶"
-};
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tabId = btn.getAttribute("data-tab");
+    switchTab(tabId);
+  });
+});
 
-// Lista de respostas baseadas em palavras-chave
-const respostas = [
-  {
-    palavras: ["oi", "ola", "olá", "eae", "e aí", "bom dia", "boa tarde", "boa noite"],
-    emocao: "feliz",
-    respostas: [
-      "Oi! 👋 Como vai?",
-      "Olá! Como posso ajudar você hoje? 😊",
-      "Eae! Pronto para conversar? 😎"
-    ]
-  },
-  {
-    palavras: ["tudo bem", "como voce esta", "como você está", "como vai"],
-    emocao: "feliz",
-    respostas: [
-      "Estou ótimo! 😁 E com você?",
-      "Tudo bem por aqui, obrigado por perguntar! E com você?",
-      "Muito animado e pronto para te ajudar! E com você?"
-    ]
-  },
-  {
-    palavras: ["ajuda", "me ajuda", "preciso de ajuda", "socorro", "problema"],
-    emocao: "confiante",
-    respostas: [
-      "Claro! Me conta mais sobre o que precisa!",
-      "Vou te ajudar com certeza! 💪 O que está acontecendo?",
-      "Deixa comigo, vamos resolver isso juntos!"
-    ]
-  },
-  {
-    palavras: ["tchau", "adeus", "até mais", "ate mais", "falou", "obrigado", "obrigada"],
-    emocao: "feliz",
-    respostas: [
-      "Tchau! 👋 Qualquer coisa estarei por aqui.",
-      "Até mais! Tenha um ótimo dia! 😊",
-      "De nada! Nos vemos em breve!"
-    ]
-  },
-  {
-    palavras: [],
-    emocao: "pensativo",
-    respostas: [
-      "Interessante... me conta mais sobre isso. 🤔",
-      "Hmm, deixa eu pensar um pouco...",
-      "Boa pergunta! Deixe-me refletir.",
-      "Não sei exatamente, mas podemos pesquisar juntos!"
-    ]
+// ==========================================
+// 2. CONFIGURAÇÕES DE API & STORAGE
+// ==========================================
+function loadSettingsFromStorage() {
+  // Carrega configurações gerais
+  onlineMode = localStorage.getItem("onlineMode") === "true";
+  switchOnlineMode.checked = onlineMode;
+  providerSelectGroup.style.display = onlineMode ? "block" : "none";
+  
+  activeProvider = localStorage.getItem("activeProvider") || "openrouter";
+  selectProvider.value = activeProvider;
+
+  apiKeys.openrouter = "";
+  openrouterKeyInput.value = "";
+
+  apiKeys.gemini = "";
+  geminiKeyInput.value = "";
+  
+  apiKeys.openai = "";
+  openaiKeyInput.value = "";
+  
+  const validOpenRouterModels = [
+    "google/gemma-4-31b-it:free",
+    "openrouter/owl-alpha",
+    "poolside/laguna-xs.2:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "openrouter/free"
+  ];
+  apiModels.openrouter = localStorage.getItem("openrouterModel") || "openrouter/free";
+  if (!validOpenRouterModels.includes(apiModels.openrouter) || apiModels.openrouter === "google/gemma-4-31b-it:free") {
+    apiModels.openrouter = "openrouter/free";
+    localStorage.setItem("openrouterModel", apiModels.openrouter);
   }
-];
+  openrouterModelSelect.value = apiModels.openrouter;
 
-// Remove acentos e deixa tudo minúsculo
-function normalizarTexto(texto) {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  apiModels.gemini = localStorage.getItem("geminiModel") || "gemini-1.5-flash";
+  geminiModelSelect.value = apiModels.gemini;
+  
+  apiModels.openai = localStorage.getItem("openaiModel") || "gpt-4o-mini";
+  openaiModelSelect.value = apiModels.openai;
+
+  // Carrega configurações de Personalidade
+  activeEmotion = localStorage.getItem("activeEmotion") || "neutro";
+  updatePersonalityUI(activeEmotion);
+  
+  personalityTuning.creativity = parseFloat(localStorage.getItem("creativity")) || 0.7;
+  sliderCreativity.value = personalityTuning.creativity;
+  valCreativity.textContent = personalityTuning.creativity;
+  
+  personalityTuning.emojiFreq = parseInt(localStorage.getItem("emojiFreq")) || 1;
+  sliderEmojiFreq.value = personalityTuning.emojiFreq;
+  updateSliderLabel("emojiFreq", personalityTuning.emojiFreq);
+
+  personalityTuning.length = parseInt(localStorage.getItem("length")) || 1;
+  sliderLength.value = personalityTuning.length;
+  updateSliderLabel("length", personalityTuning.length);
+
+  // Carrega configurações de Acessibilidade
+  accessibilitySettings.ttsEnabled = localStorage.getItem("ttsEnabled") === "true";
+  switchTTS.checked = accessibilitySettings.ttsEnabled;
+  voiceSettingsSub.style.display = accessibilitySettings.ttsEnabled ? "flex" : "none";
+  
+  accessibilitySettings.ttsRate = parseFloat(localStorage.getItem("ttsRate")) || 1.0;
+  ttsRateSlider.value = accessibilitySettings.ttsRate;
+  valTtsRate.textContent = accessibilitySettings.ttsRate.toFixed(1) + "x";
+
+  accessibilitySettings.ttsPitch = parseFloat(localStorage.getItem("ttsPitch")) || 1.0;
+  ttsPitchSlider.value = accessibilitySettings.ttsPitch;
+  valTtsPitch.textContent = accessibilitySettings.ttsPitch.toFixed(1);
+
+  accessibilitySettings.highContrast = localStorage.getItem("highContrast") === "true";
+  switchContrast.checked = accessibilitySettings.highContrast;
+  applyContrastMode(accessibilitySettings.highContrast);
+
+  accessibilitySettings.dyslexicFont = localStorage.getItem("dyslexicFont") === "true";
+  switchDyslexic.checked = accessibilitySettings.dyslexicFont;
+  applyDyslexicFont(accessibilitySettings.dyslexicFont);
+
+  accessibilitySettings.vLibrasEnabled = localStorage.getItem("vLibrasEnabled") !== "false"; // Default true
+  switchVLibras.checked = accessibilitySettings.vLibrasEnabled;
+  applyVLibras(accessibilitySettings.vLibrasEnabled);
+
+  accessibilitySettings.visualFocus = localStorage.getItem("visualFocus") === "true";
+  switchVisualFocus.checked = accessibilitySettings.visualFocus;
+  applyVisualFocus(accessibilitySettings.visualFocus);
+
+  accessibilitySettings.fontScale = parseFloat(localStorage.getItem("fontScale")) || 1.0;
+  sliderFontSize.value = accessibilitySettings.fontScale;
+  applyFontScale(accessibilitySettings.fontScale);
+
+  updateModelBadge();
 }
 
-// Prepara o texto para comparação
-function prepararParaBusca(texto) {
-  return normalizarTexto(texto)
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function saveSettings() {
+  try {
+    localStorage.setItem("onlineMode", switchOnlineMode.checked);
+    localStorage.setItem("activeProvider", selectProvider.value);
+    localStorage.setItem("openrouterModel", openrouterModelSelect.value);
+    localStorage.setItem("geminiModel", geminiModelSelect.value);
+    localStorage.setItem("openaiModel", openaiModelSelect.value);
+
+    // Atualiza o estado
+    onlineMode = switchOnlineMode.checked;
+    activeProvider = selectProvider.value;
+    apiModels.openrouter = openrouterModelSelect.value;
+    apiModels.gemini = geminiModelSelect.value;
+    apiModels.openai = openaiModelSelect.value;
+
+    updateModelBadge();
+    showSaveStatus("Configurações salvas com sucesso!", "success");
+    
+    // Pequena reação feliz do Shade
+    trocarMascote("feliz");
+    falaMascote.textContent = "Configurações salvas! Agora estou mais inteligente! 😊";
+    falarTexto("Configurações salvas! Agora estou mais inteligente!");
+  } catch (error) {
+    showSaveStatus("Erro ao salvar configurações.", "error");
+  }
 }
 
-// Verifica se a palavra ou frase existe na pergunta
-function contemPalavraOuFrase(texto, palavra) {
-  const textoPreparado = ` ${prepararParaBusca(texto)} `;
-  const palavraPreparada = prepararParaBusca(palavra);
-
-  if (!palavraPreparada) return false;
-
-  return textoPreparado.includes(` ${palavraPreparada} `);
+function showSaveStatus(message, type) {
+  saveStatusMsg.textContent = message;
+  saveStatusMsg.className = `save-status-msg ${type}`;
+  setTimeout(() => {
+    saveStatusMsg.textContent = "";
+  }, 4000);
 }
 
-// Escolhe uma resposta aleatória dentro de uma lista
-function escolherAleatorio(lista) {
-  const indice = Math.floor(Math.random() * lista.length);
-  return lista[indice];
+function updateModelBadge() {
+  if (onlineMode) {
+    if (activeProvider === "openrouter" && apiKeys.openrouter) {
+      activeModelText.textContent = `OpenRouter (${apiModels.openrouter.split('/').pop()})`;
+      activeModelBadge.classList.add("online");
+    } else if (activeProvider === "gemini" && apiKeys.gemini) {
+      activeModelText.textContent = `Gemini (${apiModels.gemini})`;
+      activeModelBadge.classList.add("online");
+    } else if (activeProvider === "openai" && apiKeys.openai) {
+      activeModelText.textContent = `OpenAI (${apiModels.openai})`;
+      activeModelBadge.classList.add("online");
+    } else {
+      activeModelText.textContent = "Offline (Falta Chave)";
+      activeModelBadge.classList.remove("online");
+    }
+  } else {
+    activeModelText.textContent = "Motor Offline";
+    activeModelBadge.classList.remove("online");
+  }
 }
 
-// Gera resposta com base na pergunta
-function gerarResposta(pergunta) {
-  for (let item of respostas) {
-    for (let palavra of item.palavras) {
-      if (contemPalavraOuFrase(pergunta, palavra)) {
-        return {
-          texto: escolherAleatorio(item.respostas),
-          emocao: item.emocao
-        };
+// Mostrar/Ocultar chaves de senha
+document.querySelectorAll(".btn-toggle-password").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const targetId = btn.getAttribute("data-target");
+    const input = document.getElementById(targetId);
+    if (input.type === "password") {
+      input.type = "text";
+      btn.textContent = "🙈";
+    } else {
+      input.type = "password";
+      btn.textContent = "👁️";
+    }
+  });
+});
+
+if (btnSaveSettings) {
+  btnSaveSettings.addEventListener("click", saveSettings);
+}
+
+if (switchOnlineMode) {
+  switchOnlineMode.addEventListener("change", (e) => {
+    providerSelectGroup.style.display = e.target.checked ? "block" : "none";
+    onlineMode = e.target.checked;
+    updateModelBadge();
+  });
+}
+
+if (selectProvider) {
+  selectProvider.addEventListener("change", (e) => {
+    activeProvider = e.target.value;
+    updateModelBadge();
+  });
+}
+
+// ==========================================
+// 3. PERSONALIDADE DO MASCOTE (CONTROLES)
+// ==========================================
+function updatePersonalityUI(emotion) {
+  personalityOptions.forEach(opt => {
+    if (opt.getAttribute("data-emotion") === emotion) {
+      opt.classList.add("active");
+    } else {
+      opt.classList.remove("active");
+    }
+  });
+  activeEmotion = emotion;
+  localStorage.setItem("activeEmotion", emotion);
+}
+
+function updateSliderLabel(sliderId, value) {
+  if (sliderId === "emojiFreq") {
+    const labels = ["Pouca", "Média", "Muita"];
+    valEmojiFreq.textContent = labels[value];
+  } else if (sliderId === "length") {
+    const labels = ["Curta", "Moderada", "Longa"];
+    valLength.textContent = labels[value];
+  }
+}
+
+personalityOptions.forEach(opt => {
+  opt.addEventListener("click", () => {
+    const emotion = opt.getAttribute("data-emotion");
+    updatePersonalityUI(emotion);
+    testarEmocao(emotion);
+  });
+});
+
+sliderCreativity.addEventListener("input", (e) => {
+  const val = parseFloat(e.target.value);
+  valCreativity.textContent = val;
+  personalityTuning.creativity = val;
+  localStorage.setItem("creativity", val);
+});
+
+sliderEmojiFreq.addEventListener("input", (e) => {
+  const val = parseInt(e.target.value);
+  updateSliderLabel("emojiFreq", val);
+  personalityTuning.emojiFreq = val;
+  localStorage.setItem("emojiFreq", val);
+});
+
+sliderLength.addEventListener("input", (e) => {
+  const val = parseInt(e.target.value);
+  updateSliderLabel("length", val);
+  personalityTuning.length = val;
+  localStorage.setItem("length", val);
+});
+
+// ==========================================
+// 4. INTERAÇÃO E ENVIO DE MENSAGENS
+// ==========================================
+
+// Adiciona mensagens à interface gráfica do chat
+function adicionarMensagemChat(texto, remetente) {
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `msg ${remetente}`;
+
+  const metaDiv = document.createElement("div");
+  metaDiv.className = "msg-meta";
+  const agora = new Date();
+  const hora = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  metaDiv.textContent = remetente === "user" ? `Você • ${hora}` : `Shade • ${hora}`;
+
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "msg-content";
+  
+  // Formatador simples para blocos de código markdown
+  if (texto.includes("```")) {
+    const parts = texto.split("```");
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 2 === 1) {
+        // Bloco de código
+        const codeBlock = document.createElement("pre");
+        const code = document.createElement("code");
+        
+        // Remove a primeira linha identificando a linguagem se houver
+        const lines = parts[i].split("\n");
+        if (lines[0].match(/^[a-zA-Z0-9_-]+$/)) {
+          lines.shift();
+        }
+        
+        code.textContent = lines.join("\n").trim();
+        codeBlock.appendChild(code);
+        contentDiv.appendChild(codeBlock);
+      } else {
+        // Texto normal
+        if (parts[i].trim()) {
+          const textSpan = document.createElement("div");
+          textSpan.className = "chat-text-paragraph";
+          textSpan.innerHTML = formatarMarkdownSeguro(parts[i]);
+          contentDiv.appendChild(textSpan);
+        }
       }
     }
+  } else {
+    contentDiv.innerHTML = formatarMarkdownSeguro(texto);
   }
 
-  const respostaPadrao = respostas.find(item => item.palavras.length === 0);
+  msgDiv.appendChild(metaDiv);
+  msgDiv.appendChild(contentDiv);
+  chatContainer.appendChild(msgDiv);
 
-  return {
-    texto: escolherAleatorio(respostaPadrao.respostas),
-    emocao: respostaPadrao.emocao
-  };
+  // Scroll automático suave para o final
+  chatContainer.scrollTo({
+    top: chatContainer.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
-// Adiciona mensagem no chat
-function adicionarMensagem(texto, classe) {
-  const div = document.createElement("div");
-
-  div.classList.add("msg", classe);
-  div.textContent = texto;
-
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-// Troca o mascote pela imagem, se existir.
-// Se não existir, mostra o emoji provisório.
-function trocarMascote(emocao) {
-  mascoteFallback.textContent = fallbackEmocoes[emocao] || "😶";
-
-  mascoteImg.onload = function () {
-    mascoteImg.style.display = "block";
-    mascoteFallback.style.display = "none";
-  };
-
-  mascoteImg.onerror = function () {
-    mascoteImg.style.display = "none";
-    mascoteFallback.style.display = "flex";
-  };
-
-  mascoteImg.src = imagensMascote[emocao];
-
-  // Sincroniza o select de personalidade com a emoção atual
-  const selectPersonalidade = document.getElementById("select-personalidade");
-  if (selectPersonalidade) {
-    selectPersonalidade.value = emocao;
-  }
-}
-
-// Envia a pergunta
-function enviarPergunta() {
+// Envia a pergunta principal do input
+async function enviarPergunta() {
   const pergunta = perguntaInput.value.trim();
-
   if (!pergunta) return;
 
-  adicionarMensagem(pergunta, "user");
-
+  // 1. Renderiza no chat do usuário
+  adicionarMensagemChat(pergunta, "user");
   perguntaInput.value = "";
-  perguntaInput.focus();
-
-  falaMascote.textContent = "Pensando... 🤔";
+  
+  // 2. Coloca o mascote em modo pensativo enquanto processa
   trocarMascote("pensativo");
+  falaMascote.textContent = "Pensando em uma resposta apropriada... 🤔";
+  typingIndicator.style.display = "flex";
+  
+  // Auto scroll para o indicador de digitação
+  chatContainer.scrollTo({
+    top: chatContainer.scrollHeight,
+    behavior: "smooth"
+  });
 
-  setTimeout(() => {
-    const respostaGerada = gerarResposta(pergunta);
+  let respostaFinal = null;
 
-    memoria.push({
-      pergunta: pergunta,
-      resposta: respostaGerada.texto
-    });
-
-    adicionarMensagem(respostaGerada.texto, "bot");
-
-    falaMascote.textContent = respostaGerada.texto;
-    trocarMascote(respostaGerada.emocao);
+  try {
+    // 3. Verifica o fluxo de inteligência (Online vs Offline)
+    if (onlineMode) {
+      if (activeProvider === "openrouter" && apiKeys.openrouter) {
+        respostaFinal = await chamarOpenRouter(pergunta);
+      } else if (activeProvider === "gemini" && apiKeys.gemini) {
+        respostaFinal = await chamarGemini(pergunta);
+      } else if (activeProvider === "openai" && apiKeys.openai) {
+        respostaFinal = await chamarOpenAI(pergunta);
+      } else {
+        // Fallback se estiver online mas sem a chave correspondente
+        await new Promise(resolve => setTimeout(resolve, 800));
+        respostaFinal = obterRespostaOffline(pergunta);
+        respostaFinal.isOffline = true;
+      }
+    } else {
+      // Execução Offline
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simula latência natural
+      respostaFinal = obterRespostaOffline(pergunta);
+      respostaFinal.isOffline = true;
+    }
+  } catch (error) {
+    console.error(error); // Mantém o erro técnico apenas no console do desenvolvedor para depuração
     
-    // Fala o texto se o leitor estiver ativo
-    falarTexto(respostaGerada.texto);
-  }, 800);
+    let offlineResp = obterRespostaOffline(pergunta);
+    
+    let textoResposta = `⚠️ **Conexão Offline (Serviço temporariamente indisponível)**\n\n` +
+                        `Não foi possível obter uma resposta do provedor de IA online. Estou respondendo temporariamente a partir do meu banco de dados offline local.\n\n` +
+                        `💡 *Dica: Verifique se suas chaves de API estão salvas corretamente na aba de Configurações (⚙️), aguarde alguns segundos ou mude o modelo/provedor.*\n\n` +
+                        `--- \n\n` +
+                        `${offlineResp.texto}`;
+
+    respostaFinal = {
+      texto: textoResposta,
+      textoFalar: `Não foi possível conectar ao servidor. Respondendo offline: ${offlineResp.texto}`,
+      emocao: "pensativo",
+      isOffline: true
+    };
+  } finally {
+    // 4. Remove indicador de digitação
+    typingIndicator.style.display = "none";
+  }
+
+  // 5. Exibe a resposta do Shade
+  adicionarMensagemChat(respostaFinal.texto, "bot");
+  
+  // Define uma reação curta predefinida para o balão do mascote
+  const reacaoMascote = obterFalaReacao(respostaFinal.emocao, respostaFinal.isOffline);
+  falaMascote.innerHTML = formatarMarkdownSeguro(reacaoMascote);
+  falaMascote.scrollTop = 0;
+  
+  // 6. Atualiza o mascote e fala a resposta
+  trocarMascote(respostaFinal.emocao);
+  falarTexto(respostaFinal.textoFalar || respostaFinal.texto);
+
+  // 7. Salva no histórico local
+  chatHistory.push({ sender: "user", text: pergunta });
+  chatHistory.push({ sender: "bot", text: respostaFinal.texto });
 }
 
-// Clique no botão
+// Event Listeners de Envio
 if (btnEnviar) {
   btnEnviar.addEventListener("click", enviarPergunta);
 }
 
-// Enter no teclado
 if (perguntaInput) {
-  perguntaInput.addEventListener("keydown", function (e) {
+  perguntaInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       enviarPergunta();
     }
   });
 }
 
-// ==========================================
-// RECURSOS DE ACESSIBILIDADE
-// ==========================================
-
-// 1. Controle de Tamanho de Fonte (A+, A-, A)
-let fontScale = parseFloat(localStorage.getItem('fontScale')) || 1.0;
-
-function applyFontScale() {
-  document.documentElement.style.setProperty('--font-scale', fontScale);
-  localStorage.setItem('fontScale', fontScale);
-}
-
-document.getElementById('btn-font-inc').addEventListener('click', () => {
-  if (fontScale < 1.6) {
-    fontScale += 0.1;
-    applyFontScale();
-  }
-});
-
-document.getElementById('btn-font-dec').addEventListener('click', () => {
-  if (fontScale > 0.8) {
-    fontScale -= 0.1;
-    applyFontScale();
-  }
-});
-
-document.getElementById('btn-font-normal').addEventListener('click', () => {
-  fontScale = 1.0;
-  applyFontScale();
-});
-
-// 2. Alto Contraste (Contrast Toggle)
-let highContrast = localStorage.getItem('highContrast') === 'true';
-const btnContrast = document.getElementById('btn-contrast');
-
-function applyContrast() {
-  if (highContrast) {
-    document.body.classList.add('high-contrast');
-    btnContrast.classList.add('active');
-  } else {
-    document.body.classList.remove('high-contrast');
-    btnContrast.classList.remove('active');
-  }
-  localStorage.setItem('highContrast', highContrast);
-}
-
-if (btnContrast) {
-  btnContrast.addEventListener('click', () => {
-    highContrast = !highContrast;
-    applyContrast();
-  });
-}
-
-// 3. Leitor de Texto por Voz (Text-to-Speech)
-let ttsActive = localStorage.getItem('ttsActive') === 'true';
-const btnTts = document.getElementById('btn-tts');
-
-function applyTtsState() {
-  if (ttsActive) {
-    btnTts.classList.add('active');
-  } else {
-    btnTts.classList.remove('active');
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+// Carrega as chaves de API a partir de env.json caso estejam disponíveis e acessíveis
+async function carregarChavesDoEnv() {
+  // Nota: Não lemos .env no lado do cliente pois servidores web estáticos bloqueiam arquivos dotfile por padrão,
+  // resultando em erros 404 (Not Found) no console. Em vez disso, usamos env.json.
+  try {
+    const jsonResponse = await fetch("env.json");
+    if (jsonResponse.ok) {
+      const data = await jsonResponse.json();
+      let keyFound = false;
+      if (data.OPENROUTER_API_KEY) {
+        apiKeys.openrouter = data.OPENROUTER_API_KEY.trim();
+        if (openrouterKeyInput) openrouterKeyInput.value = apiKeys.openrouter;
+        keyFound = true;
+      }
+      if (data.GEMINI_API_KEY) {
+        apiKeys.gemini = data.GEMINI_API_KEY.trim();
+        if (geminiKeyInput) geminiKeyInput.value = apiKeys.gemini;
+        keyFound = true;
+      }
+      if (data.OPENAI_API_KEY) {
+        apiKeys.openai = data.OPENAI_API_KEY.trim();
+        if (openaiKeyInput) openaiKeyInput.value = apiKeys.openai;
+        keyFound = true;
+      }
+      if (keyFound) {
+        updateModelBadge();
+      }
     }
+  } catch (err) {
+    console.log("Não foi possível carregar env.json (CORS ou inexistente).");
   }
-  localStorage.setItem('ttsActive', ttsActive);
 }
 
-function falarTexto(texto) {
-  if (!ttsActive || !('speechSynthesis' in window)) return;
+// ==========================================
+// 5. INICIALIZAÇÃO GERAL DO APP
+// ==========================================
+document.addEventListener("DOMContentLoaded", async () => {
+  loadSettingsFromStorage();
+  await carregarChavesDoEnv();
   
-  window.speechSynthesis.cancel();
-  
-  // Limpa o texto de qualquer prefixo antes de falar
-  const cleanText = texto.replace(/^Shade:\s*/i, '').replace(/^Você:\s*/i, '');
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = 'pt-BR';
-  
-  const voices = window.speechSynthesis.getVoices();
-  const ptVoice = voices.find(voice => voice.lang.includes('pt-BR') || voice.lang.includes('pt_BR'));
-  if (ptVoice) {
-    utterance.voice = ptVoice;
-  }
-  
-  window.speechSynthesis.speak(utterance);
-}
-
-if (btnTts) {
-  btnTts.addEventListener('click', () => {
-    ttsActive = !ttsActive;
-    applyTtsState();
-  });
-}
-
-// Carrega as vozes para garantir compatibilidade
-if ('speechSynthesis' in window) {
-  window.speechSynthesis.onvoiceschanged = () => {};
-}
-
-// 4. Teste de Emoções (Botões de Teste)
-const mensagensTeste = {
-  feliz: "Estou feliz em te ajudar!",
-  pensativo: "Hmm... deixa eu pensar um pouco.",
-  confiante: "Pode deixar comigo. Eu consigo ajudar!",
-  neutro: "Estou te ouvindo."
-};
-
-function testarEmocao(emocao) {
-  trocarMascote(emocao);
-  const msg = mensagensTeste[emocao] || "Estou pronto.";
-  falaMascote.textContent = msg;
-  falarTexto(msg);
-}
-
-// Torna global para uso com onclick dos botões HTML
-window.testarEmocao = testarEmocao;
-
-// Inicialização do Estado
-trocarMascote("neutro");
-applyFontScale();
-applyContrast();
-applyTtsState();
+  // Reações iniciais do mascote
+  setTimeout(() => {
+    trocarMascote(activeEmotion);
+  }, 100);
+});

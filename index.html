@@ -3,78 +3,481 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mascote Offline - Shade (Acessível)</title>
+  <title>shadeAI - Assistente Pessoal Inteligente</title>
+  
+  <!-- Fontes Premium -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="CSS/style.css">
 </head>
 <body>
 
-  <!-- Barra de Acessibilidade Flutuante -->
-  <div class="accessibility-bar" role="region" aria-label="Controles de Acessibilidade">
-    <div class="accessibility-controls">
-      <span class="accessibility-label">Acessibilidade:</span>
-      <button class="acc-btn" id="btn-font-dec" aria-label="Diminuir tamanho do texto" title="Diminuir Fonte (A-)">A-</button>
-      <button class="acc-btn" id="btn-font-normal" aria-label="Tamanho de texto padrão" title="Restaurar Fonte (A)">A</button>
-      <button class="acc-btn" id="btn-font-inc" aria-label="Aumentar tamanho do texto" title="Aumentar Fonte (A+)">A+</button>
+  <main class="app-container" id="appContainer">
+    
+    <!-- BARRA LATERAL DE NAVEGAÇÃO (ABAS) -->
+    <nav class="sidebar-nav" role="navigation" aria-label="Menu Principal">
+      <div class="nav-logo">
+        <span class="logo-dot"></span>
+        <span class="logo-text">Shade</span>
+      </div>
       
-      <button class="acc-btn" id="btn-contrast" aria-label="Alternar Alto Contraste" title="Alto Contraste">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-15v14c3.31 0 6-2.69 6-6s-2.69-6-6-6z"/>
-        </svg>
-      </button>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="chat" aria-label="Chat Geral" title="Chat Geral">
+          <div class="tab-icon-wrapper brain-tab">
+            <!-- Ícone de Cérebro -->
+            <svg viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 15c-11.8 0-21.7 8.2-24.3 19.2C19.3 35.5 15 42.2 15 50c0 9.4 6.2 17.3 14.8 19.5.4 4.8 2.8 9.1 6.7 11.9 4.3 3.1 9.6 4.3 14.8 3.4.6-.1 1.1-.3 1.7-.5v-69.3z" opacity="0.9"/>
+              <path d="M50 15v69.3c.6.2 1.1.4 1.7.5 5.2.9 10.5-.3 14.8-3.4 3.9-2.8 6.3-7.1 6.7-11.9 8.6-2.2 14.8-10.1 14.8-19.5 0-7.8-4.3-14.5-10.7-15.8C74.7 23.2 64.8 15 50 15z"/>
+              <!-- Detalhes do Cérebro (Anatomia/Circuitos) -->
+              <path d="M38 35c-2 0-3.5 1.5-3.5 3.5S36 42 38 42s3.5-1.5 3.5-3.5S40 35 38 35zm24 0c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5 3.5-1.5 3.5-3.5-1.5-3.5-3.5-3.5z" fill="#ff7da7"/>
+              <path d="M42 55c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8zm24 0c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8z" fill="#ff7da7"/>
+            </svg>
+          </div>
+          <span class="tab-label">Conversar</span>
+        </button>
 
-      <button class="acc-btn" id="btn-tts" aria-label="Ativar leitor de texto por voz" title="Leitor de Tela (Voz)">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-        </svg>
-      </button>
-    </div>
-  </div>
+        <button class="nav-tab" data-tab="settings" aria-label="Configurações de API" title="Configurações de API">
+          <div class="tab-icon-wrapper gear-tab">
+            <!-- Ícone de Engrenagem com API escrito -->
+            <svg viewBox="0 0 100 100" fill="currentColor">
+              <path d="M90 45h-9.3c-.6-3-1.8-5.8-3.4-8.4l6.6-6.6c1.6-1.6 1.6-4.1 0-5.7l-5-5c-1.6-1.6-4.1-1.6-5.7 0l-6.6 6.6c-2.6-1.6-5.4-2.8-8.4-3.4V10c0-2.2-1.8-4-4-4h-7c-2.2 0-4 1.8-4 4v9.3c-3 .6-5.8 1.8-8.4 3.4l-6.6-6.6c-1.6-1.6-4.1-1.6-5.7 0l-5 5c-1.6 1.6-1.6 4.1 0 5.7l6.6 6.6c-1.6 2.6-2.8 5.4-3.4 8.4H10c-2.2 0-4 1.8-4 4v7c0 2.2 1.8 4 4 4h9.3c.6 3 1.8 5.8 3.4 8.4l-6.6 6.6c-1.6 1.6-1.6 4.1 0 5.7l5 5c1.6 1.6 4.1 1.6 5.7 0l6.6-6.6c2.6 1.6 5.4 2.8 8.4 3.4V90c0 2.2 1.8 4 4 4h7c2.2 0 4-1.8 4-4v-9.3c3-.6 5.8-1.8 8.4-3.4l6.6 6.6c1.6 1.6 4.1 1.6 5.7 0l5-5c1.6-1.6 1.6-4.1 0-5.7l-6.6-6.6c1.6-2.6 2.8-5.4 3.4-8.4H90c2.2 0 4-1.8 4-4v-7c0-2.2-1.8-4-4-4zm-40 20c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z"/>
+              <text x="50" y="55" font-family="'Outfit', sans-serif" font-size="16" font-weight="800" fill="currentColor" text-anchor="middle">API</text>
+            </svg>
+          </div>
+          <span class="tab-label">Integrações</span>
+        </button>
 
-  <main class="container">
-    <!-- Lado Esquerdo: Mascote e Falas -->
-    <section class="left">
-      <div class="mascote-area">
-        <img id="mascote" class="mascote-img" src="img/neutro.png" alt="Mascote Shade">
-        <div id="mascoteFallback" class="mascote-fallback">😶</div>
+        <button class="nav-tab" data-tab="personality" aria-label="Personalidade do Mascote" title="Personalidade do Mascote">
+          <div class="tab-icon-wrapper face-tab">
+            <!-- Ícone de Carinhas (Humor/Personalidade) -->
+            <svg viewBox="0 0 100 100" fill="currentColor">
+              <!-- Rosto Feliz -->
+              <path d="M30 65c0 8.3 6.7 15 15 15h10c8.3 0 15-6.7 15-15H30z" opacity="0.8"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8"/>
+              <circle cx="35" cy="40" r="5"/>
+              <circle cx="65" cy="40" r="5"/>
+              <path d="M38 58s4 5 12 5 12-5 12-5" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="tab-label">Expressão</span>
+        </button>
+
+        <button class="nav-tab" data-tab="accessibility" aria-label="Acessibilidade" title="Acessibilidade">
+          <div class="tab-icon-wrapper access-tab">
+            <!-- Ícone de Acessibilidade (Universal) -->
+            <svg viewBox="0 0 100 100" fill="currentColor">
+              <circle cx="50" cy="25" r="10"/>
+              <path d="M75 45c-1.5-1.5-4-1.5-5.5 0L55 59v23c0 2.2-1.8 4-4 4s-4-1.8-4-4V65h-4v17c0 2.2-1.8 4-4 4s-4-1.8-4-4V59L25.5 45c-1.5-1.5-4-1.5-5.5 0s-1.5 4 0 5.5l18 18c1 1 2.3 1.5 3.5 1.5H58c1.2 0 2.5-.5 3.5-1.5l18-18c1.6-1.5 1.6-4 0-5.5z"/>
+              <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="6" stroke-dasharray="6 6"/>
+            </svg>
+          </div>
+          <span class="tab-label">Inclusão</span>
+        </button>
       </div>
-
-      <div id="falaMascote" class="fala">
-        Olá! Eu sou o Shade. Como posso ajudar?
+      
+      <div class="sidebar-footer">
+        <span class="version-text">v1.1.0</span>
       </div>
+    </nav>
 
-      <div class="personalidade-area">
-        <label for="select-personalidade" class="personalidade-label">Personalidade do Mascote</label>
-        <select id="select-personalidade" onchange="testarEmocao(this.value)" aria-label="Configurações de Personalidade">
-          <option value="neutro" selected>Neutro 😶</option>
-          <option value="feliz">Feliz 😊</option>
-          <option value="pensativo">Pensativo 🤔</option>
-          <option value="confiante">Confiante 💪</option>
-        </select>
+    <!-- COLUNA CENTRAL-ESQUERDA: PAINEL DO MASCOTE (PERSISTENTE) -->
+    <section class="mascote-panel" aria-label="Área do Mascote Shade">
+      <div class="mascote-card">
+        <div class="mascote-glow"></div>
+        <div class="mascote-header">
+          <span class="status-indicator online"></span>
+          <span class="status-text" id="mascoteStatus">Shade está neutro</span>
+        </div>
+        
+        <div class="mascote-area">
+          <img id="mascote" class="mascote-img" src="img/neutro.png" alt="Mascote Shade">
+          <div id="mascoteFallback" class="mascote-fallback">😶</div>
+        </div>
+
+        <div class="speech-bubble-wrapper">
+          <div id="falaMascote" class="fala-balao">
+            Olá! Eu sou o Shade, seu assistente pessoal. O que vamos criar hoje?
+          </div>
+          <div class="bubble-arrow"></div>
+        </div>
       </div>
     </section>
 
-    <!-- Lado Direito: Chat e Input -->
-    <section class="right">
-      <div class="titulo">
-        <h1>Chatbot Shade</h1>
-        <p>Digite uma pergunta e veja o mascote mudar de emoção.</p>
-      </div>
+    <!-- COLUNA PRINCIPAL: CONTEÚDO DINÂMICO DAS ABAS -->
+    <section class="content-panel" aria-label="Painel de Controle">
+      
+      <!-- ABA 1: CHAT GERAL -->
+      <div id="panel-chat" class="tab-panel active">
+        <div class="panel-header">
+          <div class="header-info">
+            <h1>Cérebro Geral</h1>
+            <p>Interaja com o Shade no chat geral. Ele aprende com o contexto.</p>
+          </div>
+          <div class="active-model-badge" id="activeModelBadge">
+            <span class="badge-dot"></span>
+            <span class="badge-text" id="activeModelText">Motor Offline</span>
+          </div>
+        </div>
 
-      <div id="chat" class="chat" aria-live="polite">
-        <div class="msg bot">
-          Shade: Oi! Estou pronto para conversar.
+        <div id="chat" class="chat-container" aria-live="polite">
+          <div class="msg bot">
+            <div class="msg-meta">Shade • Agora</div>
+            <div class="msg-content">Oi! Estou pronto para conversar. Pergunte-me qualquer coisa!</div>
+          </div>
+        </div>
+
+        <!-- Indicador de Digitação -->
+        <div id="typingIndicator" class="typing-indicator" style="display: none;">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <!-- Teclado Virtual Acoplado (Injetado via JS ou Estático) -->
+        <div id="virtualKeyboard" class="keyboard-container" style="display: none;">
+          <!-- Teclado será gerado dinamicamente no JS -->
+        </div>
+
+        <div class="input-area-wrapper">
+          <div class="input-container">
+            <input id="pergunta" type="text" placeholder="Digite sua pergunta ou use o teclado virtual..." aria-label="Escreva sua pergunta para o Shade">
+            
+            <button id="btnVirtualKeyboardToggle" class="input-icon-btn" aria-label="Alternar Teclado Virtual" title="Teclado Virtual">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+                <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M18 12h.01M10 12h.01M14 12h.01M7 16h10"/>
+              </svg>
+            </button>
+            
+            <button id="btnEnviar" class="send-btn" aria-label="Enviar pergunta">
+              <span>Enviar</span>
+              <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="input-area">
-        <input id="pergunta" type="text" placeholder="Digite sua pergunta..." aria-label="Escreva sua pergunta para o Shade">
-        <button id="btnEnviar" aria-label="Enviar pergunta">Enviar</button>
+      <!-- ABA 2: CONFIGURAÇÕES DE API -->
+      <div id="panel-settings" class="tab-panel">
+        <div class="panel-header">
+          <div class="header-info">
+            <h1>Configurações de Integração</h1>
+            <p>Configure chaves de API para usar modelos de inteligência artificial de última geração.</p>
+          </div>
+        </div>
+
+        <div class="panel-scroll-content">
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">🌐</span>
+              <h2>Modo de Conexão</h2>
+            </div>
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchOnlineMode" class="form-label-bold">Usar APIs Online</label>
+                <p class="form-desc">Ative para conectar o Shade às nuvens de IA. Se desativado, o Shade responderá offline.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchOnlineMode">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="form-group" id="providerSelectGroup" style="display: none; margin-top: 15px;">
+              <label for="selectProvider" class="form-label">Provedor de IA Ativo</label>
+              <select id="selectProvider" class="custom-select">
+                <option value="openrouter" selected>OpenRouter (Llama 3, Gemma - Gratuito)</option>
+                <option value="gemini">Google Gemini API</option>
+                <option value="openai">OpenAI API</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-card" id="cardOpenRouter">
+            <div class="settings-section-title">
+              <span class="icon-span">🚀</span>
+              <h2>OpenRouter API (Modelos Gratuitos)</h2>
+            </div>
+            
+            <div class="form-group" style="display: none;">
+              <label for="openrouterKey" class="form-label">OpenRouter API Key</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="openrouterKey" placeholder="Cole sua API Key do OpenRouter (sk-or-...)..." aria-label="Chave API do OpenRouter">
+                <button type="button" class="btn-toggle-password" data-target="openrouterKey" aria-label="Mostrar Chave">👁️</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="openrouterModel" class="form-label">Modelo Preferencial</label>
+              <select id="openrouterModel" class="custom-select">
+                <option value="openrouter/free" selected>Roteador Automático (Modelo Livre - Recomendado)</option>
+                <option value="google/gemma-4-31b-it:free">Gemma 4 31B IT (Google - Gratuito)</option>
+                <option value="openrouter/owl-alpha">Owl Alpha (OpenRouter - Experimental)</option>
+                <option value="poolside/laguna-xs.2:free">Laguna XS.2 (Poolside - Gratuito)</option>
+                <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron-3 Super 120B (NVIDIA - Gratuito)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">🧠</span>
+              <h2>Google Gemini API</h2>
+            </div>
+            
+            <div class="form-group" style="display: none;">
+              <label for="geminiKey" class="form-label">Gemini API Key</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="geminiKey" placeholder="Cole sua API Key do Google AI Studio..." aria-label="Chave API do Gemini">
+                <button type="button" class="btn-toggle-password" data-target="geminiKey" aria-label="Mostrar Chave">👁️</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="geminiModel" class="form-label">Modelo Preferencial</label>
+              <select id="geminiModel" class="custom-select">
+                <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Rápido & Eficiente)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Raciocínio Avançado)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">⚡</span>
+              <h2>OpenAI API</h2>
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label for="openaiKey" class="form-label">OpenAI API Key</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="openaiKey" placeholder="Cole sua API Key da OpenAI (sk-...)..." aria-label="Chave API da OpenAI">
+                <button type="button" class="btn-toggle-password" data-target="openaiKey" aria-label="Mostrar Chave">👁️</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="openaiModel" class="form-label">Modelo Preferencial</label>
+              <select id="openaiModel" class="custom-select">
+                <option value="gpt-4o-mini" selected>GPT-4o Mini (Leve & Rápido)</option>
+                <option value="gpt-4o">GPT-4o (Poderoso & Multimodal)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button id="btnSaveSettings" class="action-btn-primary">Salvar Configurações</button>
+            <span class="save-status-msg" id="saveStatusMsg"></span>
+          </div>
+        </div>
       </div>
+
+      <!-- ABA 3: PERSONALIDADE DO MASCOTE -->
+      <div id="panel-personality" class="tab-panel">
+        <div class="panel-header">
+          <div class="header-info">
+            <h1>Núcleo de Expressividade</h1>
+            <p>Ajuste o comportamento do Shade. A personalidade altera a atitude, o tom de voz e as reações no chat.</p>
+          </div>
+        </div>
+
+        <div class="panel-scroll-content">
+          <div class="settings-card">
+            <h2>Escolha a Persona Ativa</h2>
+            <p class="form-desc">Clique em uma das opções abaixo para testar instantaneamente a resposta emocional do Shade.</p>
+            
+            <div class="personality-grid">
+              <button class="personality-option active" data-emotion="neutro">
+                <span class="personality-emoji">😶</span>
+                <span class="personality-name">Neutro</span>
+                <span class="personality-desc">Respostas equilibradas e calmas</span>
+              </button>
+              
+              <button class="personality-option" data-emotion="feliz">
+                <span class="personality-emoji">😊</span>
+                <span class="personality-name">Feliz</span>
+                <span class="personality-desc">Alegre, entusiasta e rico em emojis</span>
+              </button>
+              
+              <button class="personality-option" data-emotion="pensativo">
+                <span class="personality-emoji">🤔</span>
+                <span class="personality-name">Pensativo</span>
+                <span class="personality-desc">Analítico, reflexivo e detalhista</span>
+              </button>
+              
+              <button class="personality-option" data-emotion="confiante">
+                <span class="personality-emoji">💪</span>
+                <span class="personality-name">Confiante</span>
+                <span class="personality-desc">Motivador, proativo e dinâmico</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h2>Ajuste Fino de Comportamento</h2>
+            
+            <div class="slider-group">
+              <div class="slider-info">
+                <label for="sliderCreativity">Criatividade (Temperatura)</label>
+                <span class="slider-value" id="valCreativity">0.7</span>
+              </div>
+              <input type="range" id="sliderCreativity" min="0" max="1" step="0.1" value="0.7">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <label for="sliderEmojiFreq">Frequência de Emojis</label>
+                <span class="slider-value" id="valEmojiFreq">Média</span>
+              </div>
+              <input type="range" id="sliderEmojiFreq" min="0" max="2" step="1" value="1">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-info">
+                <label for="sliderLength">Comprimento da Resposta</label>
+                <span class="slider-value" id="valLength">Moderada</span>
+              </div>
+              <input type="range" id="sliderLength" min="0" max="2" step="1" value="1">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 4: ACESSIBILIDADE -->
+      <div id="panel-accessibility" class="tab-panel">
+        <div class="panel-header">
+          <div class="header-info">
+            <h1>Configurações de Inclusão (PCD)</h1>
+            <p>Customizações visuais e auditivas para garantir a melhor experiência para todos.</p>
+          </div>
+        </div>
+
+        <div class="panel-scroll-content">
+          <!-- Leitor de Tela / Fala -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">🗣️</span>
+              <h2>Leitor de Tela & Voz (TTS)</h2>
+            </div>
+            
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchTTS" class="form-label-bold">Ativar Voz Automática</label>
+                <p class="form-desc">O Shade lerá em voz alta todas as mensagens que responder no chat.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchTTS">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="form-group voice-settings-sub" id="voiceSettingsSub" style="display: none;">
+              <label for="ttsVoiceSelect" class="form-label">Voz do Sintetizador</label>
+              <select id="ttsVoiceSelect" class="custom-select"></select>
+
+              <div class="slider-group">
+                <div class="slider-info">
+                  <label for="ttsRateSlider">Velocidade da Fala</label>
+                  <span class="slider-value" id="valTtsRate">1.0x</span>
+                </div>
+                <input type="range" id="ttsRateSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-info">
+                  <label for="ttsPitchSlider">Tom (Pitch)</label>
+                  <span class="slider-value" id="valTtsPitch">1.0</span>
+                </div>
+                <input type="range" id="ttsPitchSlider" min="0.5" max="1.5" step="0.1" value="1.0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Adaptabilidade Visual -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">👁️</span>
+              <h2>Visual & Contraste</h2>
+            </div>
+
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchContrast" class="form-label-bold">Modo de Alto Contraste</label>
+                <p class="form-desc">Altera as cores para preto, branco e amarelo, maximizando a legibilidade para baixa visão.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchContrast">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchDyslexic" class="form-label-bold">Fonte Amigável para Dislexia</label>
+                <p class="form-desc">Muda a tipografia da interface para uma fonte projetada para facilitar a leitura por pessoas disléxicas.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchDyslexic">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="slider-group font-slider-group">
+              <div class="slider-info">
+                <label for="sliderFontSize">Tamanho do Texto (Escala)</label>
+                <div class="font-btn-row">
+                  <button class="font-adjust-btn" id="btnFontDec">A-</button>
+                  <button class="font-adjust-btn" id="btnFontNormal">A</button>
+                  <button class="font-adjust-btn" id="btnFontInc">A+</button>
+                </div>
+              </div>
+              <input type="range" id="sliderFontSize" min="0.8" max="1.6" step="0.1" value="1.0">
+            </div>
+          </div>
+
+          <!-- Acessibilidade Motora & Outros -->
+          <div class="settings-card">
+            <div class="settings-section-title">
+              <span class="icon-span">♿</span>
+              <h2>Acessibilidade Motora e Auditiva</h2>
+            </div>
+
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchVLibras" class="form-label-bold">Tradutor de Libras (VLibras)</label>
+                <p class="form-desc">Ativa o widget flutuante de tradução para a Língua Brasileira de Sinais.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchVLibras" checked>
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="form-group toggle-group">
+              <div class="toggle-info">
+                <label for="switchVisualFocus" class="form-label-bold">Destaque de Foco Visual</label>
+                <p class="form-desc">Adiciona uma borda grossa e de alta visibilidade em elementos ativos durante a navegação por teclado (Tab).</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switchVisualFocus">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </section>
+
   </main>
 
   <!-- VLibras (Widget de Tradução para Libras) -->
-  <div vw class="enabled">
+  <div vw class="enabled" id="vlibrasContainer">
     <div vw-access-button class="active" aria-label="Traduzir em LIBRAS"></div>
     <div vw-plugin-wrapper>
       <div class="vw-plugin-top-wrapper"></div>
@@ -85,7 +488,13 @@
     new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
 
-  <!-- Scripts do App -->
+  <!-- Scripts do App (Modularizados para rodar localmente sem problemas de CORS) -->
+  <script src="js/state.js" defer></script>
+  <script src="js/utils.js" defer></script>
+  <script src="js/offlineData.js" defer></script>
+  <script src="js/accessibility.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/mascot.js" defer></script>
   <script src="js/script.js" defer></script>
 </body>
 </html>
