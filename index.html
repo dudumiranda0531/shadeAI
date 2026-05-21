@@ -42,11 +42,14 @@
         Olá! Eu sou o Shade. Como posso ajudar?
       </div>
 
-      <div class="botoes-teste">
-        <button onclick="testarEmocao('feliz')" aria-label="Testar emoção feliz">Feliz</button>
-        <button onclick="testarEmocao('pensativo')" aria-label="Testar emoção pensativa">Pensativo</button>
-        <button onclick="testarEmocao('confiante')" aria-label="Testar emoção confiante">Confiante</button>
-        <button onclick="testarEmocao('neutro')" aria-label="Testar emoção neutra">Neutro</button>
+      <div class="personalidade-area">
+        <label for="select-personalidade" class="personalidade-label">Personalidade do Mascote</label>
+        <select id="select-personalidade" onchange="testarEmocao(this.value)" aria-label="Configurações de Personalidade">
+          <option value="neutro" selected>Neutro 😶</option>
+          <option value="feliz">Feliz 😊</option>
+          <option value="pensativo">Pensativo 🤔</option>
+          <option value="confiante">Confiante 💪</option>
+        </select>
       </div>
     </section>
 

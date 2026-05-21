@@ -154,6 +154,12 @@ function trocarMascote(emocao) {
   };
 
   mascoteImg.src = imagensMascote[emocao];
+
+  // Sincroniza o select de personalidade com a emoção atual
+  const selectPersonalidade = document.getElementById("select-personalidade");
+  if (selectPersonalidade) {
+    selectPersonalidade.value = emocao;
+  }
 }
 
 // Envia a pergunta

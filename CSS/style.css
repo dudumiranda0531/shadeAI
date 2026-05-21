@@ -225,30 +225,54 @@ body {
   font-size: 1.05rem;
 }
 
-/* Botões de Teste */
-.botoes-teste {
+/* Personalidade do Mascote Dropdown */
+.personalidade-area {
   display: flex;
+  flex-direction: column;
   gap: 8px;
+  width: 90%;
   margin-top: 15px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
-.botoes-teste button {
-  font-size: 0.85rem;
-  padding: 8px 14px;
-  background: #22c55e;
-  color: white;
-  border: none;
-  border-radius: 8px;
+.personalidade-label {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
   font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.personalidade-area select {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-color-chat);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: bold;
+  outline: none;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px;
   transition: all 0.2s ease;
 }
 
-.botoes-teste button:hover {
-  background: #16a34a;
-  transform: scale(1.03);
+.personalidade-area select:hover {
+  border-color: var(--button-color);
+}
+
+.personalidade-area select:focus {
+  border-color: var(--button-color);
+  box-shadow: 0 0 0 2px rgba(78, 124, 255, 0.2);
+}
+
+body.high-contrast .personalidade-area select {
+  border: 2px solid white !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='yellow'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
 }
 
 /* Lado direito */
