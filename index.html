@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mascote Offline - Shade (Acessível)</title>
+  <link rel="stylesheet" href="CSS/style.css">
+</head>
+<body>
+
+  <!-- Barra de Acessibilidade Flutuante -->
+  <div class="accessibility-bar" role="region" aria-label="Controles de Acessibilidade">
+    <div class="accessibility-controls">
+      <span class="accessibility-label">Acessibilidade:</span>
+      <button class="acc-btn" id="btn-font-dec" aria-label="Diminuir tamanho do texto" title="Diminuir Fonte (A-)">A-</button>
+      <button class="acc-btn" id="btn-font-normal" aria-label="Tamanho de texto padrão" title="Restaurar Fonte (A)">A</button>
+      <button class="acc-btn" id="btn-font-inc" aria-label="Aumentar tamanho do texto" title="Aumentar Fonte (A+)">A+</button>
+      
+      <button class="acc-btn" id="btn-contrast" aria-label="Alternar Alto Contraste" title="Alto Contraste">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-15v14c3.31 0 6-2.69 6-6s-2.69-6-6-6z"/>
+        </svg>
+      </button>
+
+      <button class="acc-btn" id="btn-tts" aria-label="Ativar leitor de texto por voz" title="Leitor de Tela (Voz)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Lado Esquerdo: Mascote e Falas -->
+    <section class="left">
+      <div class="mascote-area">
+        <img id="mascote" class="mascote-img" src="img/neutro.png" alt="Mascote Shade">
+        <div id="mascoteFallback" class="mascote-fallback">😶</div>
+      </div>
+
+      <div id="falaMascote" class="fala">
+        Olá! Eu sou o Shade. Como posso ajudar?
+      </div>
+
+      <div class="botoes-teste">
+        <button onclick="testarEmocao('feliz')" aria-label="Testar emoção feliz">Feliz</button>
+        <button onclick="testarEmocao('pensativo')" aria-label="Testar emoção pensativa">Pensativo</button>
+        <button onclick="testarEmocao('confiante')" aria-label="Testar emoção confiante">Confiante</button>
+        <button onclick="testarEmocao('neutro')" aria-label="Testar emoção neutra">Neutro</button>
+      </div>
+    </section>
+
+    <!-- Lado Direito: Chat e Input -->
+    <section class="right">
+      <div class="titulo">
+        <h1>Chatbot Shade</h1>
+        <p>Digite uma pergunta e veja o mascote mudar de emoção.</p>
+      </div>
+
+      <div id="chat" class="chat" aria-live="polite">
+        <div class="msg bot">
+          Shade: Oi! Estou pronto para conversar.
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input id="pergunta" type="text" placeholder="Digite sua pergunta..." aria-label="Escreva sua pergunta para o Shade">
+        <button id="btnEnviar" aria-label="Enviar pergunta">Enviar</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- VLibras (Widget de Tradução para Libras) -->
+  <div vw class="enabled">
+    <div vw-access-button class="active" aria-label="Traduzir em LIBRAS"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+  </script>
+
+  <!-- Scripts do App -->
+  <script src="js/script.js" defer></script>
+</body>
+</html>

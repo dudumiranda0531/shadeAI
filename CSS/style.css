@@ -1,39 +1,177 @@
+:root {
+  --font-scale: 1.0;
+  --bg-color-main: #121826;
+  --bg-color-container: #1b2333;
+  --bg-color-left: #202b40;
+  --bg-color-chat: #111827;
+  --bg-color-input: #2d374d;
+  --text-color: #ffffff;
+  --text-color-muted: #cfd7e6;
+  --accent-color: #f9d423;
+  --accent-color-hover: #ffe45c;
+  --button-color: #4e7cff;
+  --button-color-hover: #6b92ff;
+  --msg-user-bg: #4e7cff;
+  --msg-bot-bg: #2d374d;
+  --speech-bg: #ffffff;
+  --speech-text: #000000;
+  
+  --border-radius: 20px;
+}
+
+/* Alto Contraste */
+body.high-contrast {
+  --bg-color-main: #000000;
+  --bg-color-container: #000000;
+  --bg-color-left: #111111;
+  --bg-color-chat: #000000;
+  --bg-color-input: #000000;
+  --text-color: #ffffff;
+  --text-color-muted: #ffff00;
+  --accent-color: #ffff00;
+  --accent-color-hover: #ffffbb;
+  --button-color: #ffffff;
+  --button-color-hover: #dddddd;
+  --msg-user-bg: #0000ff;
+  --msg-bot-bg: #222222;
+  --speech-bg: #ffffff;
+  --speech-text: #000000;
+}
+
+body.high-contrast .container {
+  border: 3px solid #ffffff;
+}
+
+body.high-contrast .accessibility-controls {
+  border: 2px solid #ffffff;
+}
+
+body.high-contrast .acc-btn {
+  border: 1px solid #ffffff;
+}
+
+body.high-contrast .acc-btn.active {
+  background: #ffff00;
+  color: #000000;
+  border-color: #ffff00;
+}
+
+html {
+  font-size: calc(16px * var(--font-scale));
+  scroll-behavior: smooth;
+}
+
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  background: #121826;
-  color: white;
+  background: var(--bg-color-main);
+  color: var(--text-color);
   font-family: Arial, sans-serif;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 20px 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Barra de Acessibilidade */
+.accessibility-bar {
+  width: 900px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 5px;
+  z-index: 100;
+}
+
+.accessibility-controls {
+  background: var(--bg-color-left);
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.accessibility-label {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  font-weight: bold;
+  margin-right: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.acc-btn {
+  background: var(--bg-color-chat);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+}
+
+.acc-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.acc-btn:hover {
+  background: var(--accent-color);
+  color: #111;
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.acc-btn:active {
+  transform: translateY(0);
+}
+
+.acc-btn.active {
+  background: var(--button-color);
+  color: white;
+  border-color: var(--button-color);
 }
 
 /* Container principal */
 .container {
   width: 900px;
   height: 600px;
-  background: #1b2333;
-  border-radius: 20px;
+  background: var(--bg-color-container);
+  border-radius: var(--border-radius);
   display: flex;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  transition: background-color 0.3s ease;
 }
 
 /* Lado esquerdo */
 .left {
   width: 40%;
-  background: #202b40;
+  background: var(--bg-color-left);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
   padding: 20px;
+  transition: background-color 0.3s ease;
 }
 
 /* Área do mascote */
@@ -43,6 +181,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 /* Imagem do mascote */
@@ -51,6 +190,7 @@ body {
   max-height: 260px;
   object-fit: contain;
   display: none;
+  transition: transform 0.3s ease;
 }
 
 /* Fallback enquanto não tiver PNG */
@@ -58,28 +198,57 @@ body {
   width: 220px;
   height: 220px;
   background: linear-gradient(145deg, #0b1020, #182238);
-  border: 4px solid #4e7cff;
+  border: 4px solid var(--button-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 80px;
+  font-size: 5rem;
   box-shadow: 0 0 30px rgba(78, 124, 255, 0.35);
 }
 
 /* Balão de fala */
 .fala {
-  background: white;
-  color: black;
+  background: var(--speech-bg);
+  color: var(--speech-text);
   padding: 15px;
   border-radius: 15px;
-  max-width: 260px;
+  width: 90%;
   text-align: center;
   min-height: 80px;
   line-height: 1.4;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-size: 1.05rem;
+}
+
+/* Botões de Teste */
+.botoes-teste {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.botoes-teste button {
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.botoes-teste button:hover {
+  background: #16a34a;
+  transform: scale(1.03);
 }
 
 /* Lado direito */
@@ -87,41 +256,67 @@ body {
   width: 60%;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 30px;
+  justify-content: space-between;
+  transition: background-color 0.3s ease;
+}
+
+.titulo {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.titulo h1 {
+  color: var(--accent-color);
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.titulo p {
+  color: var(--text-color-muted);
+  font-size: 1rem;
 }
 
 /* Chat */
 .chat {
   flex: 1;
   overflow-y: auto;
-  padding-right: 10px;
+  padding: 20px;
+  margin: 15px 0;
+  background: var(--bg-color-chat);
+  border-radius: 15px;
+  transition: background-color 0.3s ease;
 }
 
 /* Mensagens */
 .msg {
   margin-bottom: 15px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   max-width: 80%;
   line-height: 1.4;
   word-wrap: break-word;
+  font-size: 1rem;
 }
 
 .user {
-  background: #4e7cff;
+  background: var(--msg-user-bg);
+  color: white;
   margin-left: auto;
+  border-bottom-right-radius: 2px;
 }
 
 .bot {
-  background: #2d374d;
+  background: var(--msg-bot-bg);
+  color: white;
   margin-right: auto;
+  border-bottom-left-radius: 2px;
 }
 
 /* Área do input */
 .input-area {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
 }
 
 input {
@@ -130,9 +325,15 @@ input {
   border: none;
   border-radius: 12px;
   outline: none;
-  background: #2d374d;
-  color: white;
-  font-size: 16px;
+  background: var(--bg-color-input);
+  color: var(--text-color);
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: border 0.2s ease;
+}
+
+input:focus {
+  border-color: var(--button-color);
 }
 
 input::placeholder {
@@ -140,31 +341,52 @@ input::placeholder {
 }
 
 button {
-  padding: 15px 20px;
+  padding: 15px 22px;
   border: none;
   border-radius: 12px;
-  background: #4e7cff;
-  color: white;
+  background: var(--accent-color);
+  color: #111;
   cursor: pointer;
-  font-size: 16px;
-  transition: 0.2s;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
 }
 
 button:hover {
-  background: #6b92ff;
+  background: var(--accent-color-hover);
+  transform: scale(1.03);
+}
+
+#btnEnviar {
+  background: var(--button-color);
+  color: white;
+}
+
+#btnEnviar:hover {
+  background: var(--button-color-hover);
 }
 
 /* Responsivo para telas menores */
 @media (max-width: 800px) {
   body {
-    align-items: flex-start;
-    padding: 20px;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .accessibility-bar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .accessibility-controls {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .container {
     width: 100%;
     height: auto;
-    min-height: 90vh;
     flex-direction: column;
   }
 
@@ -186,10 +408,10 @@ button:hover {
   .mascote-fallback {
     width: 160px;
     height: 160px;
-    font-size: 60px;
+    font-size: 3.5rem;
   }
 
   .chat {
-    min-height: 300px;
+    min-height: 250px;
   }
 }
