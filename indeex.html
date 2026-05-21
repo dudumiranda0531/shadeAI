@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mascote Offline - Shade</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #121826;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 900px;
+      height: 600px;
+      background: #1b2333;
+      border-radius: 20px;
+      display: flex;
+      overflow: hidden;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .left {
+      width: 40%;
+      background: #202b40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mascote {
+      width: 260px;
+      height: 260px;
+      object-fit: contain;
+      transition: 0.3s ease;
+    }
+
+    .fala {
+      margin-top: 20px;
+      background: white;
+      color: #111;
+      padding: 15px;
+      border-radius: 15px;
+      width: 90%;
+      text-align: center;
+      font-weight: bold;
+      min-height: 70px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .right {
+      width: 60%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .titulo {
+      text-align: center;
+    }
+
+    .titulo h1 {
+      color: #f9d423;
+      margin-bottom: 10px;
+    }
+
+    .titulo p {
+      color: #cfd7e6;
+    }
+
+    .chat {
+      flex: 1;
+      margin: 25px 0;
+      background: #111827;
+      border-radius: 15px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .mensagem {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 12px;
+      max-width: 85%;
+      line-height: 1.4;
+    }
+
+    .usuario {
+      background: #2563eb;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .bot {
+      background: #374151;
+      margin-right: auto;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 14px 22px;
+      border: none;
+      border-radius: 10px;
+      background: #f9d423;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #ffe45c;
+      transform: scale(1.03);
+    }
+
+    .botoes-teste {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .botoes-teste button {
+      font-size: 13px;
+      padding: 9px 12px;
+      background: #22c55e;
+      color: white;
+    }
+
+    .botoes-teste button:hover {
+      background: #16a34a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="left">
+      <img id="mascote" class="mascote" src="img/neutro.png" alt="Mascote Shade">
+
+      <div id="fala" class="fala">
+        Olá! Eu sou o Shade. Como posso ajudar?
+      </div>
+
+      <div class="botoes-teste">
+        <button onclick="mudarEmocao('feliz')">Feliz</button>
+        <button onclick="mudarEmocao('pensativo')">Pensativo</button>
+        <button onclick="mudarEmocao('confiante')">Confiante</button>
+        <button onclick="mudarEmocao('neutro')">Neutro</button>
+      </div>
+    </div>
+
+    <div class="right">
+
+      <div class="titulo">
+        <h1>Chatbot Shade</h1>
+        <p>Digite uma pergunta e veja o mascote mudar de emoção.</p>
+      </div>
+
+      <div id="chat" class="chat">
+        <div class="mensagem bot">
+          Shade: Oi! Estou pronto para conversar.
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input id="pergunta" type="text" placeholder="Digite sua pergunta...">
+        <button onclick="enviarPergunta()">Enviar</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const mascote = document.getElementById("mascote");
+    const fala = document.getElementById("fala");
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("pergunta");
+
+    const imagens = {
+      feliz: "img/feliz.png",
+      pensativo: "img/pensativo.png",
+      confiante: "img/confiante.png",
+      neutro: "img/neutro.png"
+    };
+
+    function mudarEmocao(emocao) {
+      mascote.src = imagens[emocao];
+
+      if (emocao === "feliz") {
+        fala.innerText = "Estou feliz em te ajudar!";
+      }
+
+      if (emocao === "pensativo") {
+        fala.innerText = "Hmm... deixa eu pensar um pouco.";
+      }
+
+      if (emocao === "confiante") {
+        fala.innerText = "Pode deixar comigo. Eu consigo ajudar!";
+      }
+
+      if (emocao === "neutro") {
+        fala.innerText = "Estou te ouvindo.";
+      }
+    }
+
+    function adicionarMensagem(texto, tipo) {
+      const div = document.createElement("div");
+      div.classList.add("mensagem");
+      div.classList.add(tipo);
+      div.innerText = texto;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function enviarPergunta() {
+      const textoOriginal = input.value.trim();
+      const texto = textoOriginal.toLowerCase();
+
+      if (textoOriginal === "") {
+        mudarEmocao("neutro");
+        fala.innerText = "Digite alguma coisa primeiro.";
+        return;
+      }
+
+      adicionarMensagem("Você: " + textoOriginal, "usuario");
+
+      let resposta = "";
+      let emocao = "neutro";
+
+      if (
+        texto.includes("oi") ||
+        texto.includes("olá") ||
+        texto.includes("bom dia") ||
+        texto.includes("boa tarde") ||
+        texto.includes("boa noite") ||
+        texto.includes("obrigado") ||
+        texto.includes("obrigada") ||
+        texto.includes("legal") ||
+        texto.includes("gostei")
+      ) {
+        resposta = "Shade: Que bom falar com você!";
+        emocao = "feliz";
+      }
+
+      else if (
+        texto.includes("?") ||
+        texto.includes("como") ||
+        texto.includes("por que") ||
+        texto.includes("porque") ||
+        texto.includes("dúvida") ||
+        texto.includes("não entendi") ||
+        texto.includes("me explica") ||
+        texto.includes("qual")
+      ) {
+        resposta = "Shade: Boa pergunta... deixa eu pensar melhor.";
+        emocao = "pensativo";
+      }
+
+      else if (
+        texto.includes("consegui") ||
+        texto.includes("pronto") ||
+        texto.includes("vamos") ||
+        texto.includes("certo") ||
+        texto.includes("bora") ||
+        texto.includes("funcionou") ||
+        texto.includes("deu certo")
+      ) {
+        resposta = "Shade: Boa! Agora sim, vamos nessa!";
+        emocao = "confiante";
+      }
+
+      else {
+        resposta = "Shade: Entendi. Pode continuar.";
+        emocao = "neutro";
+      }
+
+      adicionarMensagem(resposta, "bot");
+      mudarEmocao(emocao);
+
+      input.value = "";
+      input.focus();
+    }
+
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        enviarPergunta();
+      }
+    });
+
+    mascote.onerror = function() {
+      fala.innerText = "Imagem não encontrada. Verifique se está na pasta img com o nome certo.";
+    };
+  </script>
+
+</body>
+</html>
