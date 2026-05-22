@@ -345,7 +345,7 @@ async function chamarOpenRouter(pergunta, pdfText = null, pdfName = null) {
 }
 
 // Chamada segura via proxy na Vercel (sem expor as chaves de API no cliente)
-async function chamarProxyVercel(pergunta, pdfText = null, pdfName = null, provider = "gemini", model = "gemini-1.5-flash") {
+async function chamarProxyVercel(pergunta, pdfText = null, pdfName = null, provider = "gemini", model = "gemini-3.5-flash") {
   const url = "/api/chat";
   const systemPrompt = obterInstrucaoSistema(pdfText, pdfName);
 

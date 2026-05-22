@@ -78,7 +78,7 @@ function loadSettingsFromStorage() {
   }
   openrouterModelSelect.value = apiModels.openrouter;
 
-  apiModels.gemini = localStorage.getItem("geminiModel") || "gemini-1.5-flash";
+  apiModels.gemini = localStorage.getItem("geminiModel") || "gemini-3.5-flash";
   geminiModelSelect.value = apiModels.gemini;
   
   apiModels.openai = localStorage.getItem("openaiModel") || "gpt-4o-mini";

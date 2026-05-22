@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
     let responseData;
 
     if (provider === 'gemini') {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-1.5-flash'}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.5-flash'}:generateContent?key=${apiKey}`;
 
       // Monta histórico do Gemini
       const contents = (chatHistory || []).slice(-6).map(msg => {

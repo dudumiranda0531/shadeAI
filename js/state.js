@@ -77,7 +77,7 @@ let apiKeys = {
   openrouter: ""
 };
 let apiModels = {
-  gemini: "gemini-1.5-flash",
+  gemini: "gemini-3.5-flash",
   openai: "gpt-4o-mini",
   openrouter: "openrouter/free"
 };
