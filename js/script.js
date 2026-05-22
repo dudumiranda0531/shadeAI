@@ -619,6 +619,12 @@ if (pdfInput) {
 
 // Carrega as chaves de API a partir de env.json caso estejam disponíveis e acessíveis
 async function carregarChavesDoEnv() {
+  // Evita tentar carregar env.json em produção (ex: Vercel) para não gerar erros 404 visíveis no console.
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  if (!isLocalhost) {
+    return;
+  }
+
   // Nota: Não lemos .env no lado do cliente pois servidores web estáticos bloqueiam arquivos dotfile por padrão,
   // resultando em erros 404 (Not Found) no console. Em vez disso, usamos env.json.
   try {
