@@ -61,7 +61,7 @@ function loadSettingsFromStorage() {
   switchOnlineMode.checked = onlineMode;
   providerSelectGroup.style.display = onlineMode ? "block" : "none";
   
-  activeProvider = localStorage.getItem("activeProvider") || "openrouter";
+  activeProvider = localStorage.getItem("activeProvider") || "gemini";
   selectProvider.value = activeProvider;
   
   const validOpenRouterModels = [

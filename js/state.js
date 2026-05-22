@@ -70,7 +70,7 @@ const btnRemovePdf = document.getElementById("btnRemovePdf");
 let activeTab = "chat";
 let activeEmotion = "neutro";
 let onlineMode = false;
-let activeProvider = "openrouter";
+let activeProvider = "gemini";
 let apiKeys = {
   gemini: "",
   openai: "",
