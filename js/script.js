@@ -480,15 +480,18 @@ async function enviarPergunta() {
     
     let offlineResp = obterRespostaOffline(pergunta);
     
-    let textoResposta = `⚠️ **Conexão Offline (Serviço temporariamente indisponível)**\n\n` +
-                        `Não foi possível obter uma resposta do provedor de IA online. Estou respondendo temporariamente a partir do meu banco de dados offline local.\n\n` +
-                        `💡 *Dica: Verifique se suas chaves de API estão salvas corretamente na aba de Configurações (⚙️), aguarde alguns segundos ou mude o modelo/provedor.*\n\n` +
+    let erroTexto = error.message || error;
+    let textoResposta = `⚠️ **Erro na Conexão com a IA**\n\n` +
+                        `Não foi possível obter uma resposta do provedor de IA online. Erro retornado:\n` +
+                        `\`\`\`\n${erroTexto}\n\`\`\`\n\n` +
+                        `Estou respondendo temporariamente a partir do meu banco de dados offline local.\n\n` +
+                        `💡 *Dica: Verifique se suas chaves de API estão corretas e salvas na aba de Configurações (⚙️), ou tente trocar o modelo/provedor.*\n\n` +
                         `--- \n\n` +
                         `${offlineResp.texto}`;
 
     respostaFinal = {
       texto: textoResposta,
-      textoFalar: `Não foi possível conectar ao servidor. Respondendo offline: ${offlineResp.texto}`,
+      textoFalar: `Erro na conexão. Respondendo offline: ${offlineResp.texto}`,
       emocao: "pensativo",
       isOffline: true
     };
