@@ -59,6 +59,13 @@ const btnFontNormal = document.getElementById("btnFontNormal");
 const btnVirtualKeyboardToggle = document.getElementById("btnVirtualKeyboardToggle");
 const virtualKeyboard = document.getElementById("virtualKeyboard");
 
+// Elementos do DOM - Upload de PDF
+const pdfInput = document.getElementById("pdfInput");
+const btnUploadPdf = document.getElementById("btnUploadPdf");
+const pdfBadgeContainer = document.getElementById("pdfBadgeContainer");
+const pdfName = document.getElementById("pdfName");
+const btnRemovePdf = document.getElementById("btnRemovePdf");
+
 // ESTADO GLOBAL DO APLICATIVO
 let activeTab = "chat";
 let activeEmotion = "neutro";
@@ -91,6 +98,10 @@ let accessibilitySettings = {
   fontScale: 1.0,
   virtualKeyboardVisible: false
 };
+
+// ESTADO DO PDF CARREGADO
+let uploadedPdfText = "";
+let uploadedPdfName = "";
 
 // Histórico de Conversação (Memória de Contexto)
 let chatHistory = [];

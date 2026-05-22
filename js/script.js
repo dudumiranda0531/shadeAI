@@ -46,14 +46,14 @@ function loadSettingsFromStorage() {
   activeProvider = localStorage.getItem("activeProvider") || "openrouter";
   selectProvider.value = activeProvider;
 
-  apiKeys.openrouter = "";
-  openrouterKeyInput.value = "";
+  apiKeys.openrouter = localStorage.getItem("openrouterKey") || "";
+  openrouterKeyInput.value = apiKeys.openrouter;
 
-  apiKeys.gemini = "";
-  geminiKeyInput.value = "";
+  apiKeys.gemini = localStorage.getItem("geminiKey") || "";
+  geminiKeyInput.value = apiKeys.gemini;
   
-  apiKeys.openai = "";
-  openaiKeyInput.value = "";
+  apiKeys.openai = localStorage.getItem("openaiKey") || "";
+  openaiKeyInput.value = apiKeys.openai;
   
   const validOpenRouterModels = [
     "google/gemma-4-31b-it:free",
@@ -134,6 +134,11 @@ function saveSettings() {
     localStorage.setItem("openrouterModel", openrouterModelSelect.value);
     localStorage.setItem("geminiModel", geminiModelSelect.value);
     localStorage.setItem("openaiModel", openaiModelSelect.value);
+    
+    // Salva as chaves de API com segurança no localStorage do usuário
+    localStorage.setItem("openrouterKey", openrouterKeyInput.value.trim());
+    localStorage.setItem("geminiKey", geminiKeyInput.value.trim());
+    localStorage.setItem("openaiKey", openaiKeyInput.value.trim());
 
     // Atualiza o estado
     onlineMode = switchOnlineMode.checked;
@@ -141,6 +146,10 @@ function saveSettings() {
     apiModels.openrouter = openrouterModelSelect.value;
     apiModels.gemini = geminiModelSelect.value;
     apiModels.openai = openaiModelSelect.value;
+    
+    apiKeys.openrouter = openrouterKeyInput.value.trim();
+    apiKeys.gemini = geminiKeyInput.value.trim();
+    apiKeys.openai = openaiKeyInput.value.trim();
 
     updateModelBadge();
     showSaveStatus("Configurações salvas com sucesso!", "success");
@@ -275,8 +284,8 @@ sliderLength.addEventListener("input", (e) => {
 // 4. INTERAÇÃO E ENVIO DE MENSAGENS
 // ==========================================
 
-// Adiciona mensagens à interface gráfica do chat
-function adicionarMensagemChat(texto, remetente) {
+// Adiciona mensagens à interface gráfica do chat com suporte a PDF e raciocínio
+function adicionarMensagemChat(texto, remetente, pdfName = null, reasoning = null) {
   const msgDiv = document.createElement("div");
   msgDiv.className = `msg ${remetente}`;
 
@@ -288,8 +297,29 @@ function adicionarMensagemChat(texto, remetente) {
 
   const contentDiv = document.createElement("div");
   contentDiv.className = "msg-content";
+
+  // 1. Renderiza o raciocínio se houver (acima da resposta final)
+  if (reasoning) {
+    const details = document.createElement("details");
+    details.className = "reasoning-details";
+    
+    const summary = document.createElement("summary");
+    summary.className = "reasoning-summary";
+    summary.textContent = "Raciocínio do Shade";
+    
+    const content = document.createElement("div");
+    content.className = "reasoning-content";
+    content.textContent = reasoning;
+    
+    details.appendChild(summary);
+    details.appendChild(content);
+    contentDiv.appendChild(details);
+  }
+
+  // 2. Renderiza o corpo principal do texto
+  const textDiv = document.createElement("div");
+  textDiv.className = "chat-text-body";
   
-  // Formatador simples para blocos de código markdown
   if (texto.includes("```")) {
     const parts = texto.split("```");
     for (let i = 0; i < parts.length; i++) {
@@ -306,19 +336,37 @@ function adicionarMensagemChat(texto, remetente) {
         
         code.textContent = lines.join("\n").trim();
         codeBlock.appendChild(code);
-        contentDiv.appendChild(codeBlock);
+        textDiv.appendChild(codeBlock);
       } else {
         // Texto normal
         if (parts[i].trim()) {
           const textSpan = document.createElement("div");
           textSpan.className = "chat-text-paragraph";
           textSpan.innerHTML = formatarMarkdownSeguro(parts[i]);
-          contentDiv.appendChild(textSpan);
+          textDiv.appendChild(textSpan);
         }
       }
     }
   } else {
-    contentDiv.innerHTML = formatarMarkdownSeguro(texto);
+    textDiv.innerHTML = formatarMarkdownSeguro(texto);
+  }
+  contentDiv.appendChild(textDiv);
+
+  // 3. Renderiza o anexo de PDF se houver
+  if (pdfName) {
+    const attDiv = document.createElement("div");
+    attDiv.className = "chat-pdf-attachment";
+    attDiv.innerHTML = `
+      <svg class="chat-pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <span class="chat-pdf-name">${pdfName}</span>
+    `;
+    contentDiv.appendChild(attDiv);
   }
 
   msgDiv.appendChild(metaDiv);
@@ -337,14 +385,45 @@ async function enviarPergunta() {
   const pergunta = perguntaInput.value.trim();
   if (!pergunta) return;
 
-  // 1. Renderiza no chat do usuário
-  adicionarMensagemChat(pergunta, "user");
+  // Captura o PDF atual antes de resetar o input
+  const tempPdfText = uploadedPdfText;
+  const tempPdfName = uploadedPdfName;
+
+  // 1. Renderiza no chat do usuário com o anexo se existir
+  adicionarMensagemChat(pergunta, "user", tempPdfName);
   perguntaInput.value = "";
+  
+  // Limpa o estado visual do PDF imediatamente
+  resetarPdfState();
   
   // 2. Coloca o mascote em modo pensativo enquanto processa
   trocarMascote("pensativo");
   falaMascote.textContent = "Pensando em uma resposta apropriada... 🤔";
+  
+  // Configura indicador de digitação com etapas dinâmicas de raciocínio
+  const stages = tempPdfText ? [
+    "📄 Lendo documento anexo...",
+    "🔍 Cruzando dados do PDF...",
+    "💡 Sintetizando resposta..."
+  ] : [
+    "🧠 Processando histórico...",
+    "🔍 Estruturando o raciocínio...",
+    "✍️ Escrevendo resposta final..."
+  ];
+
+  let currentStageIndex = 0;
+  function updateTypingIndicator() {
+    typingIndicator.innerHTML = `
+      <div class="typing-spinner"></div>
+      <span class="typing-indicator-text">${stages[currentStageIndex]}</span>
+    `;
+    currentStageIndex = (currentStageIndex + 1) % stages.length;
+  }
+
+  updateTypingIndicator();
   typingIndicator.style.display = "flex";
+  
+  const typingTimer = setInterval(updateTypingIndicator, 1500);
   
   // Auto scroll para o indicador de digitação
   chatContainer.scrollTo({
@@ -358,11 +437,11 @@ async function enviarPergunta() {
     // 3. Verifica o fluxo de inteligência (Online vs Offline)
     if (onlineMode) {
       if (activeProvider === "openrouter" && apiKeys.openrouter) {
-        respostaFinal = await chamarOpenRouter(pergunta);
+        respostaFinal = await chamarOpenRouter(pergunta, tempPdfText, tempPdfName);
       } else if (activeProvider === "gemini" && apiKeys.gemini) {
-        respostaFinal = await chamarGemini(pergunta);
+        respostaFinal = await chamarGemini(pergunta, tempPdfText, tempPdfName);
       } else if (activeProvider === "openai" && apiKeys.openai) {
-        respostaFinal = await chamarOpenAI(pergunta);
+        respostaFinal = await chamarOpenAI(pergunta, tempPdfText, tempPdfName);
       } else {
         // Fallback se estiver online mas sem a chave correspondente
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -393,12 +472,18 @@ async function enviarPergunta() {
       isOffline: true
     };
   } finally {
-    // 4. Remove indicador de digitação
+    // 4. Remove indicador de digitação e limpa o timer
+    clearInterval(typingTimer);
     typingIndicator.style.display = "none";
+    typingIndicator.innerHTML = `
+      <span></span>
+      <span></span>
+      <span></span>
+    `;
   }
 
-  // 5. Exibe a resposta do Shade
-  adicionarMensagemChat(respostaFinal.texto, "bot");
+  // 5. Exibe a resposta do Shade com raciocínio se disponível
+  adicionarMensagemChat(respostaFinal.texto, "bot", null, respostaFinal.reasoning);
   
   // Define uma reação curta predefinida para o balão do mascote
   const reacaoMascote = obterFalaReacao(respostaFinal.emocao, respostaFinal.isOffline);
@@ -410,8 +495,8 @@ async function enviarPergunta() {
   falarTexto(respostaFinal.textoFalar || respostaFinal.texto);
 
   // 7. Salva no histórico local
-  chatHistory.push({ sender: "user", text: pergunta });
-  chatHistory.push({ sender: "bot", text: respostaFinal.texto });
+  chatHistory.push({ sender: "user", text: pergunta, pdfText: tempPdfText, pdfName: tempPdfName });
+  chatHistory.push({ sender: "bot", text: respostaFinal.texto, reasoning: respostaFinal.reasoning });
 }
 
 // Event Listeners de Envio
@@ -424,6 +509,111 @@ if (perguntaInput) {
     if (e.key === "Enter") {
       enviarPergunta();
     }
+  });
+}
+
+// ==========================================
+// TRATAMENTO DE UPLOAD E LEITURA DE PDF
+// ==========================================
+
+// Aciona o input de arquivo oculto ao clicar no botão de clipe de papel
+if (btnUploadPdf && pdfInput) {
+  btnUploadPdf.addEventListener("click", () => {
+    pdfInput.click();
+  });
+}
+
+// Reseta o estado do PDF carregado e limpa a UI
+function resetarPdfState() {
+  if (pdfInput) pdfInput.value = "";
+  uploadedPdfText = "";
+  uploadedPdfName = "";
+  if (pdfBadgeContainer) pdfBadgeContainer.style.display = "none";
+  if (btnUploadPdf) btnUploadPdf.classList.remove("active");
+}
+
+// Ao clicar no botão de fechar (x) do badge do PDF
+if (btnRemovePdf) {
+  btnRemovePdf.addEventListener("click", () => {
+    resetarPdfState();
+    trocarMascote("feliz");
+    falaMascote.textContent = "Documento PDF removido. De volta à conversa geral! 😊";
+    falarTexto("Documento removido.");
+  });
+}
+
+// Escuta a seleção de arquivo PDF no input
+if (pdfInput) {
+  pdfInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      trocarMascote("pensativo");
+      falaMascote.textContent = "Por favor, selecione apenas arquivos em formato PDF! ⚠️";
+      falarTexto("Por favor, selecione apenas arquivos em formato PDF!");
+      resetarPdfState();
+      return;
+    }
+
+    // Define estado visual de carregamento
+    trocarMascote("pensativo");
+    falaMascote.textContent = "Lendo o PDF... Extraindo o texto 📄";
+    falarTexto("Lendo o PDF... Extraindo o texto");
+
+    const reader = new FileReader();
+    reader.onload = async function () {
+      try {
+        const arrayBuffer = this.result;
+
+        // Configura o worker do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+
+        let textTemp = "";
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(" ");
+          textTemp += `[Página ${pageNum}]\n${pageText}\n\n`;
+        }
+
+        if (!textTemp.trim()) {
+          throw new Error("Não foi possível extrair nenhum texto legível. O arquivo pode ser composto apenas por imagens digitalizadas ou estar protegido.");
+        }
+
+        // Salva nos estados globais
+        uploadedPdfText = textTemp;
+        uploadedPdfName = file.name;
+
+        // Atualiza a UI
+        if (pdfName) pdfName.textContent = file.name;
+        if (pdfBadgeContainer) pdfBadgeContainer.style.display = "flex";
+        if (btnUploadPdf) btnUploadPdf.classList.add("active");
+
+        // Mascote reage positivamente
+        trocarMascote("feliz");
+        falaMascote.textContent = `PDF "${file.name}" carregado com sucesso! Agora você pode fazer perguntas sobre ele. 😊`;
+        falarTexto("PDF carregado com sucesso! Agora você pode fazer perguntas sobre ele.");
+      } catch (error) {
+        console.error("Erro ao ler o PDF:", error);
+        trocarMascote("pensativo");
+        falaMascote.textContent = `Erro ao ler PDF: ${error.message || error} ⚠️`;
+        falarTexto("Erro ao ler PDF.");
+        resetarPdfState();
+      }
+    };
+
+    reader.onerror = function () {
+      trocarMascote("pensativo");
+      falaMascote.textContent = "Erro de leitura do arquivo local. Tente novamente! ⚠️";
+      falarTexto("Erro de leitura do arquivo.");
+      resetarPdfState();
+    };
+
+    reader.readAsArrayBuffer(file);
   });
 }
 

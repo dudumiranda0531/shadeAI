@@ -3,7 +3,7 @@
 // ==========================================
 
 // Cria instrução de sistema que guiará a IA de acordo com as preferências de Personalidade
-function obterInstrucaoSistema() {
+function obterInstrucaoSistema(pdfText = null, pdfName = null) {
   let instrucao = "Você é o Shade, um assistente virtual especialista em Cibersegurança, Segurança da Informação e Programação. " +
                   "Seu objetivo principal é auxiliar os usuários de forma direta, objetiva e muito concisa. Evite introduções longas ou rodeios. " +
                   "Mesmo sendo especialista em cibersegurança, você também responde a quaisquer outras perguntas de temas gerais com presteza e clareza. ";
@@ -35,25 +35,47 @@ function obterInstrucaoSistema() {
     instrucao += "Forneça uma resposta detalhada, explicativa e completa. Use listas ordenadas/não ordenadas e explore as nuances do assunto. ";
   }
 
+  // Se houver um PDF carregado ou passado
+  const activePdfText = pdfText !== null ? pdfText : (typeof uploadedPdfText !== "undefined" ? uploadedPdfText : "");
+  const activePdfName = pdfName !== null ? pdfName : (typeof uploadedPdfName !== "undefined" ? uploadedPdfName : "");
+
+  if (activePdfText) {
+    instrucao += "\n\n[CONTEXTO DO DOCUMENTO PDF CARREGADO]\n" +
+                 "O usuário enviou um documento PDF chamado \"" + activePdfName + "\" com o seguinte conteúdo:\n" +
+                 "--- INÍCIO DO PDF ---\n" + activePdfText + "\n--- FIM DO PDF ---\n" +
+                 "Por favor, responda à pergunta do usuário baseando-se e utilizando o contexto deste PDF acima sempre que pertinente. " +
+                 "Priorize as informações do documento para responder. Se a pergunta for totalmente irrelevante ao documento ou for uma conversa casual, você pode responder de forma geral.";
+  }
+
   return instrucao;
 }
 
 // Chamada Real para API do Google Gemini
-async function chamarGemini(pergunta) {
+async function chamarGemini(pergunta, pdfText = null, pdfName = null) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${apiModels.gemini}:generateContent?key=${apiKeys.gemini}`;
-  const systemPrompt = obterInstrucaoSistema();
+  const systemPrompt = obterInstrucaoSistema(pdfText, pdfName);
 
   // Constrói o histórico para enviar ao Gemini
   // O formato do Gemini para conversações é {"role": "user"|"model", "parts": [{"text": "..."}]}
-  const contents = chatHistory.slice(-6).map(msg => ({
-    role: msg.sender === "user" ? "user" : "model",
-    parts: [{ text: msg.text }]
-  }));
+  const contents = chatHistory.slice(-6).map(msg => {
+    let contentText = msg.text;
+    if (msg.pdfText) {
+      contentText = `[Documento PDF anexo: ${msg.pdfName}]\nConteúdo do PDF:\n${msg.pdfText}\n\nPergunta: ${msg.text}`;
+    }
+    return {
+      role: msg.sender === "user" ? "user" : "model",
+      parts: [{ text: contentText }]
+    };
+  });
   
   // Adiciona a pergunta atual
+  let currentContentText = pergunta;
+  if (pdfText) {
+    currentContentText = `[Documento PDF anexo: ${pdfName}]\nConteúdo do PDF:\n${pdfText}\n\nPergunta: ${pergunta}`;
+  }
   contents.push({
     role: "user",
-    parts: [{ text: pergunta }]
+    parts: [{ text: currentContentText }]
   });
 
   let response;
@@ -105,9 +127,18 @@ async function chamarGemini(pergunta) {
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   if (!text) throw new Error("Resposta vazia da API do Gemini.");
+
+  let reasoning = "";
+  if (text.includes("<think>") && text.includes("</think>")) {
+    const match = text.match(/<think>([\s\S]*?)<\/think>/);
+    if (match) {
+      reasoning = match[1].trim();
+      text = text.replace(/<think>[\s\S]*?<\/think>/, "").trim();
+    }
+  }
 
   // Deduz emoção baseado no texto gerado (análise simples)
   let emocao = activeEmotion;
@@ -116,13 +147,13 @@ async function chamarGemini(pergunta) {
   else if (textoNormalizado.includes("💪") || textoNormalizado.includes("consigo") || textoNormalizado.includes("certeza")) emocao = "confiante";
   else if (textoNormalizado.includes("🤔") || textoNormalizado.includes("analisando") || textoNormalizado.includes("pense")) emocao = "pensativo";
 
-  return { texto: text, emocao: emocao };
+  return { texto: text, emocao: emocao, reasoning: reasoning };
 }
 
 // Chamada Real para API da OpenAI
-async function chamarOpenAI(pergunta) {
+async function chamarOpenAI(pergunta, pdfText = null, pdfName = null) {
   const url = "https://api.openai.com/v1/chat/completions";
-  const systemPrompt = obterInstrucaoSistema();
+  const systemPrompt = obterInstrucaoSistema(pdfText, pdfName);
 
   const messages = [
     { role: "system", content: systemPrompt }
@@ -130,14 +161,22 @@ async function chamarOpenAI(pergunta) {
 
   // Adiciona histórico recente
   chatHistory.slice(-6).forEach(msg => {
+    let contentText = msg.text;
+    if (msg.pdfText) {
+      contentText = `[Documento PDF anexo: ${msg.pdfName}]\nConteúdo do PDF:\n${msg.pdfText}\n\nPergunta: ${msg.text}`;
+    }
     messages.push({
       role: msg.sender === "user" ? "user" : "assistant",
-      content: msg.text
+      content: contentText
     });
   });
 
   // Pergunta atual
-  messages.push({ role: "user", content: pergunta });
+  let currentContentText = pergunta;
+  if (pdfText) {
+    currentContentText = `[Documento PDF anexo: ${pdfName}]\nConteúdo do PDF:\n${pdfText}\n\nPergunta: ${pergunta}`;
+  }
+  messages.push({ role: "user", content: currentContentText });
 
   let response;
   let retries = 2;
@@ -185,9 +224,18 @@ async function chamarOpenAI(pergunta) {
   }
 
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
+  let text = data.choices?.[0]?.message?.content;
 
   if (!text) throw new Error("Resposta vazia da API da OpenAI.");
+
+  let reasoning = data.choices?.[0]?.message?.reasoning_content || data.choices?.[0]?.message?.reasoning || "";
+  if (text.includes("<think>") && text.includes("</think>")) {
+    const match = text.match(/<think>([\s\S]*?)<\/think>/);
+    if (match) {
+      reasoning = match[1].trim();
+      text = text.replace(/<think>[\s\S]*?<\/think>/, "").trim();
+    }
+  }
 
   let emocao = activeEmotion;
   const textoNormalizado = normalizarTexto(text);
@@ -195,13 +243,13 @@ async function chamarOpenAI(pergunta) {
   else if (textoNormalizado.includes("💪") || textoNormalizado.includes("consigo") || textoNormalizado.includes("certeza")) emocao = "confiante";
   else if (textoNormalizado.includes("🤔") || textoNormalizado.includes("analisando") || textoNormalizado.includes("pense")) emocao = "pensativo";
 
-  return { texto: text, emocao: emocao };
+  return { texto: text, emocao: emocao, reasoning: reasoning };
 }
 
 // Chamada Real para API do OpenRouter
-async function chamarOpenRouter(pergunta) {
+async function chamarOpenRouter(pergunta, pdfText = null, pdfName = null) {
   const url = "https://openrouter.ai/api/v1/chat/completions";
-  const systemPrompt = obterInstrucaoSistema();
+  const systemPrompt = obterInstrucaoSistema(pdfText, pdfName);
 
   const messages = [
     { role: "system", content: systemPrompt }
@@ -209,14 +257,22 @@ async function chamarOpenRouter(pergunta) {
 
   // Adiciona histórico recente
   chatHistory.slice(-6).forEach(msg => {
+    let contentText = msg.text;
+    if (msg.pdfText) {
+      contentText = `[Documento PDF anexo: ${msg.pdfName}]\nConteúdo do PDF:\n${msg.pdfText}\n\nPergunta: ${msg.text}`;
+    }
     messages.push({
       role: msg.sender === "user" ? "user" : "assistant",
-      content: msg.text
+      content: contentText
     });
   });
 
   // Pergunta atual
-  messages.push({ role: "user", content: pergunta });
+  let currentContentText = pergunta;
+  if (pdfText) {
+    currentContentText = `[Documento PDF anexo: ${pdfName}]\nConteúdo do PDF:\n${pdfText}\n\nPergunta: ${pergunta}`;
+  }
+  messages.push({ role: "user", content: currentContentText });
 
   let response;
   let retries = 2;
@@ -266,9 +322,18 @@ async function chamarOpenRouter(pergunta) {
   }
 
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
+  let text = data.choices?.[0]?.message?.content;
 
   if (!text) throw new Error("Resposta vazia da API do OpenRouter.");
+
+  let reasoning = data.choices?.[0]?.message?.reasoning_content || "";
+  if (text.includes("<think>") && text.includes("</think>")) {
+    const match = text.match(/<think>([\s\S]*?)<\/think>/);
+    if (match) {
+      reasoning = match[1].trim();
+      text = text.replace(/<think>[\s\S]*?<\/think>/, "").trim();
+    }
+  }
 
   let emocao = activeEmotion;
   const textoNormalizado = normalizarTexto(text);
@@ -276,5 +341,5 @@ async function chamarOpenRouter(pergunta) {
   else if (textoNormalizado.includes("💪") || textoNormalizado.includes("consigo") || textoNormalizado.includes("certeza")) emocao = "confiante";
   else if (textoNormalizado.includes("🤔") || textoNormalizado.includes("analisando") || textoNormalizado.includes("pense")) emocao = "pensativo";
 
-  return { texto: text, emocao: emocao };
+  return { texto: text, emocao: emocao, reasoning: reasoning };
 }
