@@ -38,14 +38,7 @@ tabButtons.forEach(btn => {
 // 2. CONFIGURAÇÕES DE API & STORAGE
 // ==========================================
 function loadSettingsFromStorage() {
-  // Carrega configurações gerais
-  onlineMode = localStorage.getItem("onlineMode") === "true";
-  switchOnlineMode.checked = onlineMode;
-  providerSelectGroup.style.display = onlineMode ? "block" : "none";
-  
-  activeProvider = localStorage.getItem("activeProvider") || "openrouter";
-  selectProvider.value = activeProvider;
-
+  // Carrega chaves de API primeiro
   apiKeys.openrouter = localStorage.getItem("openrouterKey") || "";
   openrouterKeyInput.value = apiKeys.openrouter;
 
@@ -54,6 +47,20 @@ function loadSettingsFromStorage() {
   
   apiKeys.openai = localStorage.getItem("openaiKey") || "";
   openaiKeyInput.value = apiKeys.openai;
+
+  // Carrega configurações gerais com fallback inteligente para online se houver chave salva
+  const savedOnlineMode = localStorage.getItem("onlineMode");
+  if (savedOnlineMode === null) {
+    const hasKeys = apiKeys.openrouter || apiKeys.gemini || apiKeys.openai;
+    onlineMode = hasKeys ? true : false;
+  } else {
+    onlineMode = savedOnlineMode === "true";
+  }
+  switchOnlineMode.checked = onlineMode;
+  providerSelectGroup.style.display = onlineMode ? "block" : "none";
+  
+  activeProvider = localStorage.getItem("activeProvider") || "openrouter";
+  selectProvider.value = activeProvider;
   
   const validOpenRouterModels = [
     "google/gemma-4-31b-it:free",
@@ -129,6 +136,18 @@ function loadSettingsFromStorage() {
 
 function saveSettings() {
   try {
+    // Se o usuário inseriu uma chave para o provedor ativo, força a ativação do modo online
+    const currentProvider = selectProvider.value;
+    let hasKeyForProvider = false;
+    if (currentProvider === "openrouter" && openrouterKeyInput.value.trim()) hasKeyForProvider = true;
+    if (currentProvider === "gemini" && geminiKeyInput.value.trim()) hasKeyForProvider = true;
+    if (currentProvider === "openai" && openaiKeyInput.value.trim()) hasKeyForProvider = true;
+
+    if (hasKeyForProvider) {
+      switchOnlineMode.checked = true;
+      providerSelectGroup.style.display = "block";
+    }
+
     localStorage.setItem("onlineMode", switchOnlineMode.checked);
     localStorage.setItem("activeProvider", selectProvider.value);
     localStorage.setItem("openrouterModel", openrouterModelSelect.value);
@@ -215,6 +234,7 @@ if (switchOnlineMode) {
   switchOnlineMode.addEventListener("change", (e) => {
     providerSelectGroup.style.display = e.target.checked ? "block" : "none";
     onlineMode = e.target.checked;
+    localStorage.setItem("onlineMode", onlineMode);
     updateModelBadge();
   });
 }
@@ -222,6 +242,7 @@ if (switchOnlineMode) {
 if (selectProvider) {
   selectProvider.addEventListener("change", (e) => {
     activeProvider = e.target.value;
+    localStorage.setItem("activeProvider", activeProvider);
     updateModelBadge();
   });
 }
@@ -648,6 +669,9 @@ async function carregarChavesDoEnv() {
         keyFound = true;
       }
       if (keyFound) {
+        onlineMode = true;
+        if (switchOnlineMode) switchOnlineMode.checked = true;
+        if (providerSelectGroup) providerSelectGroup.style.display = "block";
         updateModelBadge();
       }
     }
