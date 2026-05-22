@@ -51,8 +51,10 @@ function loadSettingsFromStorage() {
   // Carrega configurações gerais com fallback inteligente para online se houver chave salva
   const savedOnlineMode = localStorage.getItem("onlineMode");
   if (savedOnlineMode === null) {
+    const isLocalhost = ["localhost", "127.0.0.1", ""].includes(window.location.hostname) || window.location.protocol === "file:";
     const hasKeys = apiKeys.openrouter || apiKeys.gemini || apiKeys.openai;
-    onlineMode = hasKeys ? true : false;
+    // Se estiver hospedado (ex: Vercel) ou tiver chaves inseridas, ativa online por padrão
+    onlineMode = (!isLocalhost || hasKeys) ? true : false;
   } else {
     onlineMode = savedOnlineMode === "true";
   }
@@ -192,17 +194,21 @@ function showSaveStatus(message, type) {
 
 function updateModelBadge() {
   if (onlineMode) {
-    if (activeProvider === "openrouter" && apiKeys.openrouter) {
-      activeModelText.textContent = `OpenRouter (${apiModels.openrouter.split('/').pop()})`;
+    let keyInfo = "";
+    if (activeProvider === "openrouter") {
+      keyInfo = apiKeys.openrouter ? "" : " (Vercel)";
+      activeModelText.textContent = `OpenRouter${keyInfo} (${apiModels.openrouter.split('/').pop()})`;
       activeModelBadge.classList.add("online");
-    } else if (activeProvider === "gemini" && apiKeys.gemini) {
-      activeModelText.textContent = `Gemini (${apiModels.gemini})`;
+    } else if (activeProvider === "gemini") {
+      keyInfo = apiKeys.gemini ? "" : " (Vercel)";
+      activeModelText.textContent = `Gemini${keyInfo} (${apiModels.gemini})`;
       activeModelBadge.classList.add("online");
-    } else if (activeProvider === "openai" && apiKeys.openai) {
-      activeModelText.textContent = `OpenAI (${apiModels.openai})`;
+    } else if (activeProvider === "openai") {
+      keyInfo = apiKeys.openai ? "" : " (Vercel)";
+      activeModelText.textContent = `OpenAI${keyInfo} (${apiModels.openai})`;
       activeModelBadge.classList.add("online");
     } else {
-      activeModelText.textContent = "Offline (Falta Chave)";
+      activeModelText.textContent = "Offline (Falta Provedor)";
       activeModelBadge.classList.remove("online");
     }
   } else {
@@ -457,12 +463,24 @@ async function enviarPergunta() {
   try {
     // 3. Verifica o fluxo de inteligência (Online vs Offline)
     if (onlineMode) {
-      if (activeProvider === "openrouter" && apiKeys.openrouter) {
-        respostaFinal = await chamarOpenRouter(pergunta, tempPdfText, tempPdfName);
-      } else if (activeProvider === "gemini" && apiKeys.gemini) {
-        respostaFinal = await chamarGemini(pergunta, tempPdfText, tempPdfName);
-      } else if (activeProvider === "openai" && apiKeys.openai) {
-        respostaFinal = await chamarOpenAI(pergunta, tempPdfText, tempPdfName);
+      if (activeProvider === "openrouter") {
+        if (apiKeys.openrouter) {
+          respostaFinal = await chamarOpenRouter(pergunta, tempPdfText, tempPdfName);
+        } else {
+          respostaFinal = await chamarProxyVercel(pergunta, tempPdfText, tempPdfName, "openrouter", apiModels.openrouter);
+        }
+      } else if (activeProvider === "gemini") {
+        if (apiKeys.gemini) {
+          respostaFinal = await chamarGemini(pergunta, tempPdfText, tempPdfName);
+        } else {
+          respostaFinal = await chamarProxyVercel(pergunta, tempPdfText, tempPdfName, "gemini", apiModels.gemini);
+        }
+      } else if (activeProvider === "openai") {
+        if (apiKeys.openai) {
+          respostaFinal = await chamarOpenAI(pergunta, tempPdfText, tempPdfName);
+        } else {
+          respostaFinal = await chamarProxyVercel(pergunta, tempPdfText, tempPdfName, "openai", apiModels.openai);
+        }
       } else {
         // Fallback se estiver online mas sem a chave correspondente
         await new Promise(resolve => setTimeout(resolve, 800));

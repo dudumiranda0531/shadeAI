@@ -343,3 +343,54 @@ async function chamarOpenRouter(pergunta, pdfText = null, pdfName = null) {
 
   return { texto: text, emocao: emocao, reasoning: reasoning };
 }
+
+// Chamada segura via proxy na Vercel (sem expor as chaves de API no cliente)
+async function chamarProxyVercel(pergunta, pdfText = null, pdfName = null, provider = "gemini", model = "gemini-1.5-flash") {
+  const url = "/api/chat";
+  const systemPrompt = obterInstrucaoSistema(pdfText, pdfName);
+
+  const bodyData = {
+    provider: provider,
+    model: model,
+    pergunta: pergunta,
+    pdfText: pdfText,
+    pdfName: pdfName,
+    chatHistory: chatHistory,
+    systemPrompt: systemPrompt,
+    creativity: personalityTuning.creativity,
+    activeEmotion: activeEmotion
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(bodyData)
+  });
+
+  if (!response.ok) {
+    let errorDetail = "";
+    try {
+      const errData = await response.json();
+      errorDetail = errData.error || errData.message || JSON.stringify(errData);
+    } catch (e) {
+      try {
+        errorDetail = await response.text();
+      } catch (textErr) {
+        errorDetail = response.statusText;
+      }
+    }
+    throw new Error(errorDetail || `Erro ao chamar o proxy (/api/chat) na Vercel (${response.status})`);
+  }
+
+  const data = await response.json();
+  if (!data.texto) throw new Error("Resposta vazia retornada pelo proxy da Vercel.");
+
+  return {
+    texto: data.texto,
+    emocao: data.emocao || activeEmotion,
+    reasoning: data.reasoning || ""
+  };
+}
+
